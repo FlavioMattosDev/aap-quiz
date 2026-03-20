@@ -1268,10 +1268,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Você está trabalhando em um servidor Linux e executa um playbook, mas percebe que ele está usando o arquivo de configuração errado. Qual é a ordem de precedência CORRETA que o Ansible usa para procurar o arquivo ansible.cfg?",
     opcoes: [
-      "A. ~/.ansible.cfg -> ./ansible.cfg -> /etc/ansible/ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG",
+      "A. ~/.ansible.cfg do diretório home -> ./ansible.cfg do diretório atual -> /etc/ansible/ansible.cfg global -> variável de ambiente ANSIBLE_CONFIG como último recurso",
       "B. Variável de Ambiente ANSIBLE_CONFIG -> ./ansible.cfg -> ~/.ansible.cfg -> /etc/ansible/ansible.cfg",
-      "C. /etc/ansible/ansible.cfg -> ~/.ansible.cfg -> ./ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG",
-      "D. ./ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG -> ~/.ansible.cfg -> /etc/ansible/ansible.cfg"
+      "C. /etc/ansible/ansible.cfg global -> ~/.ansible.cfg do usuário -> ./ansible.cfg do diretório de trabalho -> variável de ambiente ANSIBLE_CONFIG com maior prioridade",
+      "D. ./ansible.cfg do diretório atual -> variável de ambiente ANSIBLE_CONFIG -> ~/.ansible.cfg no home do usuário -> /etc/ansible/ansible.cfg como fallback global"
     ],
     correta: "B",
     explicacao: "B é a correta. O Ansible procura o arquivo de configuração nesta exata ordem (o primeiro que encontrar é usado): 1º Variável de ambiente (ANSIBLE_CONFIG), 2º Diretório atual (./ansible.cfg), 3º Diretório home do usuário (~/.ansible.cfg) e por último o global (/etc/ansible/ansible.cfg)."
@@ -1281,10 +1281,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Em um arquivo de inventário INI, como você seleciona hosts que pertencem ao grupo 'webservers' E TAMBÉM ao grupo 'dbservers' usando padrões (patterns) de linha de comando ou no playbook?",
     opcoes: [
-      "A. webservers OR dbservers",
-      "B. webservers:!dbservers",
+      "A. webservers OR dbservers, usando o operador lógico OR em texto que seleciona hosts presentes em qualquer um dos dois grupos especificados no inventário",
+      "B. webservers:!dbservers, que seleciona todos os hosts do grupo webservers excluindo explicitamente aqueles que também pertencem ao grupo dbservers no inventário",
       "C. webservers:&dbservers",
-      "D. webservers,dbservers"
+      "D. webservers,dbservers separados por vírgula, que representa a união dos dois grupos e inclui todos os hosts presentes em webservers ou dbservers indistintamente"
     ],
     correta: "C",
     explicacao: "C é a correta. O caractere '&' representa a interseção (AND). Portanto, 'webservers:&dbservers' atinge apenas as máquinas que estão em ambos os grupos. A vírgula ou dois-pontos simples (,) representa a união (OR), e o ponto de exclamação (!) representa a exclusão (NOT)."
@@ -1307,10 +1307,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Se você quiser testar as mudanças que um playbook faria em um sistema gerenciado, SEM aplicar efetivamente essas mudanças (modo simulação), quais parâmetros você deve passar ao comando ansible-playbook?",
     opcoes: [
-      "A. --dry-run ou -D",
+      "A. --dry-run ou -D, passados ao ansible-playbook para simular a execução sem aplicar mudanças",
       "B. --check (-C) e opcionalmente --diff (-D) para ver o que mudaria nos arquivos",
-      "C. --simulate e --verbose",
-      "D. --syntax-check"
+      "C. --simulate e --verbose, que combinados ativam o modo de simulação com saída detalhada",
+      "D. --syntax-check, que valida a sintaxe do arquivo YAML sem executar as tasks nos hosts"
     ],
     correta: "B",
     explicacao: "B é a correta. O parâmetro `--check` (-C) roda o Ansible em modo 'Dry Run', não alterando o host alvo (sempre que o módulo suportar). O `--diff` (-D) é excelente quando usado junto para mostrar exatamente quais linhas de arquivos seriam alteradas."
@@ -1325,9 +1325,9 @@ const questionBank = [
     pergunta: "Qual é a diferença fundamental entre 'import_tasks' e 'include_tasks'?",
     opcoes: [
       "A. 'import_tasks' é estático e pré-processado antes do início da execução, enquanto 'include_tasks' é dinâmico e avaliado em tempo de execução.",
-      "B. 'include_tasks' é estático, enquanto 'import_tasks' é dinâmico.",
-      "C. 'import_tasks' só pode ser usado para importar Roles, não arquivos YAML comuns.",
-      "D. Não há diferença, ambos são processados em tempo de execução desde a versão 2.10."
+      "B. 'include_tasks' é estático e processado antes da execução, enquanto 'import_tasks' é avaliado em tempo real durante o play.",
+      "C. 'import_tasks' é restrito a Roles do Ansible Galaxy e não suporta arquivos YAML locais ou caminhos relativos ao projeto.",
+      "D. Não há diferença prática entre os dois; desde o Ansible 2.10 ambos são avaliados dinamicamente em tempo de execução."
     ],
     correta: "A",
     explicacao: "A é a correta. Importações (import_tasks, import_role) são processadas na fase de parseamento antes do play rodar, o que significa que não podem ser iteradas com 'loop'. Inclusões (include_tasks) ocorrem no exato momento em que a task é alcançada no fluxo de execução, permitindo loops e variáveis avaliadas tardiamente."
@@ -1380,10 +1380,10 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "No Event-Driven Ansible (EDA), qual componente é o encarregado de ler dados de telemetria externos (ex: um alerta do Prometheus ou uma mensagem no Kafka) e convertê-los em eventos que o Rulebook entenda?",
     opcoes: [
-      "A. EDA Controller",
+      "A. EDA Controller, o componente central do Event-Driven Ansible responsável por orquestrar e rotear eventos entre as fontes externas e as ações dos Rulebooks",
       "B. Event Source Plugin",
-      "C. Action Plugin",
-      "D. Private Automation Hub"
+      "C. Action Plugin, o componente do EDA que processa os eventos já filtrados pelas condições do Rulebook e dispara a automação correspondente no Automation Controller",
+      "D. Private Automation Hub, que atua como intermediário de mensagens entre sistemas de telemetria externos e o motor de regras do Event-Driven Ansible no cluster AAP"
     ],
     correta: "B",
     explicacao: "B é a correta. Os 'Source Plugins' são pequenas integrações em Python (ex: ansible.eda.kafka, ansible.eda.webhook) que escutam as fontes externas e injetam a carga útil (payload) no motor de regras."
@@ -1393,10 +1393,10 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "Dentro da arquitetura do Automation Mesh, o que caracteriza um nó do tipo 'Hop Node'?",
     opcoes: [
-      "A. Ele compila as imagens de contêiner e envia para o Private Hub.",
+      "A. Ele compila as imagens de contêiner Execution Environment localmente e as publica no Private Automation Hub, tornando-as disponíveis para todos os nós de execução.",
       "B. Ele atua como um roteador de tráfego de automação, roteando as conexões do Controller até os Execution Nodes isolados por firewalls, sem rodar a automação nele mesmo.",
-      "C. Ele executa os Job Templates e consome a licença do AAP.",
-      "D. Ele armazena o banco de dados PostgreSQL do Controller de forma distribuída."
+      "C. Ele executa os Job Templates diretamente nos hosts do inventário, consome uma licença de nó de execução do AAP e reporta os resultados em tempo real ao Controller.",
+      "D. Ele hospeda uma réplica distribuída e sincronizada do banco de dados PostgreSQL do Automation Controller para garantir alta disponibilidade e failover automático."
     ],
     correta: "B",
     explicacao: "B é a correta. Hop Nodes não executam automação (não rodam contêineres do EE) e não precisam de banco de dados. Eles servem exclusivamente como proxies de roteamento de tráfego TCP na malha do Receptor (Automation Mesh), ideais para colocar em DMZs."
@@ -1423,10 +1423,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "Para melhorar a velocidade de execução de um playbook que gerencia 5.000 servidores, você ativa a funcionalidade 'Job Slicing' (Fatiamento de Trabalho) no Automation Controller. O que essa função faz exatamente?",
     opcoes: [
-      "A. Ignora as tasks que têm a tag 'slow' e executa apenas o básico.",
+      "A. Divide o playbook em seções menores baseadas em tags definidas pelo operador, ignorando tasks marcadas como 'slow' e priorizando as críticas para execução imediata.",
       "B. Divide o inventário original em partes menores (fatias) e lança um workflow com múltiplos jobs paralelos (um para cada fatia) que podem rodar simultaneamente em vários nós de execução.",
-      "C. Desativa o Gather Facts automaticamente e eleva a quantidade de forks para o limite do servidor.",
-      "D. Fatiar o código do playbook em playbooks menores e executa um por dia."
+      "C. Desativa automaticamente o módulo Gather Facts em todos os hosts do inventário e configura o número de forks para o valor máximo tolerado pelo hardware do nó ativo.",
+      "D. Separa o código YAML do playbook em arquivos independentes e menores, agendando e executando cada um sequencialmente em janelas de manutenção distintas ao longo do dia."
     ],
     correta: "B",
     explicacao: "B é a correta. O Job Slicing divide uma execução maciça em N fatias de inventário e joga a carga horizontalmente no cluster/Automation Mesh. Ao final, o Controller agrega o resultado visual em um único Workflow Job."
@@ -1436,10 +1436,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "Você criou um Job Template no Controller e deseja que operadores de NOC possam informar o nome de um usuário a ser bloqueado no momento em que clicarem no botão de executar. Qual recurso do Controller atende a isso nativamente?",
     opcoes: [
-      "A. Smart Inventory",
-      "B. Extra-vars injetadas via CLI no container.",
+      "A. Smart Inventory, que permite criar filtros dinâmicos sobre inventários existentes e injetar variáveis automaticamente nos Job Templates no momento da execução.",
+      "B. Extra-vars passadas diretamente pela linha de comando do container ansible-runner, sobrescrevendo as variáveis padrão definidas no playbook e no inventário.",
       "C. Surveys (Pesquisas)",
-      "D. Credentials Types"
+      "D. Credential Types customizados que permitem injetar variáveis sensíveis nos templates de execução através de formulários protegidos da interface do Controller."
     ],
     correta: "C",
     explicacao: "C é a correta. O recurso de 'Surveys' cria formulários web na UI do Controller (podendo ser caixas de texto, listas suspensas, senhas mascaradas). As respostas fornecidas pelo usuário se tornam 'extra_vars' passadas ao playbook em tempo de execução."
@@ -1449,10 +1449,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "No Controller, como funciona o modelo de permissões baseadas em funções (RBAC)? Se o João possui a permissão 'Execute' em um Job Template, ele pode modificar o playbook subjacente ou alterar o inventário associado?",
     opcoes: [
-      "A. Sim, a permissão Execute engloba a permissão Edit no Controller.",
+      "A. Sim, a permissão Execute no Controller é cumulativa e inclui automaticamente as permissões de edição do Template, Inventário e Projeto associados.",
       "B. Não, para modificar o playbook ou o inventário, ele precisaria ter as funções 'Admin' do Projeto, do Inventário e do Job Template correspondente.",
-      "C. Não, o RBAC do Controller é definido exclusivamente no lado do Active Directory, não havendo funções internas.",
-      "D. Sim, qualquer usuário pode modificar qualquer objeto por padrão no Controller."
+      "C. Não, porque o RBAC do Controller é inteiramente gerenciado via Active Directory ou LDAP externo; permissões internas de objetos não existem de forma independente.",
+      "D. Sim, por padrão no Controller todos os usuários autenticados têm acesso completo de leitura e escrita a todos os objetos, exigindo restrição manual."
     ],
     correta: "B",
     explicacao: "B é a correta. O RBAC do Controller é granular. A permissão 'Execute' (Use) num Job Template permite apenas clicar no botão 'Lançar'. O usuário não pode ver o repositório Git (Projeto), nem editar a origem das variáveis ou as credenciais atreladas."
@@ -1466,10 +1466,10 @@ const questionBank = [
     dominio: "5.1",
     pergunta: "Você modificou uma Collection em seu projeto, mas ao executar via 'ansible-navigator run', ele ainda usa a Collection antiga que estava na imagem original do EE. Qual parâmetro força o navigator a mapear e preferir as collections do diretório local do seu projeto?",
     opcoes: [
-      "A. --pull-policy always",
+      "A. --pull-policy always, que força o ansible-navigator a baixar a versão mais recente da imagem EE a cada execução, garantindo as collections atualizadas",
       "B. Configurar 'ansible-navigator.yml' com 'execution-environment: volume-mounts'",
-      "C. Não é possível; EEs são imutáveis e não aceitam volumes.",
-      "D. --bindep-install"
+      "C. Não é possível mapear diretórios locais em EEs; as imagens de container são imutáveis por definição e não suportam montagem de volumes externos em runtime.",
+      "D. --bindep-install, que instrui o ansible-navigator a reinstalar as dependências de sistema do bindep.txt diretamente no container em execução antes do play."
     ],
     correta: "B",
     explicacao: "B é a correta. Em desenvolvimento, o ansible-navigator permite mapear diretórios locais de roles e collections para dentro do contêiner em tempo de execução usando 'volume-mounts'. Na CLI seria `--execution-environment-volume-mounts`."
@@ -1509,10 +1509,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Um playbook falhou misteriosamente em um host remoto e a mensagem de erro padrão não detalha muito bem o porquê o pacote yum não instalou. Como você pode aumentar a verbosidade do Ansible para ver os detalhes da conexão SSH e a execução dos módulos?",
     opcoes: [
-      "A. Adicionar a tag --debug-all",
+      "A. Adicionar a flag --debug-all ao comando ansible-playbook, que habilita o nível máximo de log incluindo os detalhes de autenticação e execução dos módulos",
       "B. Usar o argumento -v, -vv, -vvv ou -vvvv na linha de comando.",
-      "C. Alterar a configuração do firewall alvo.",
-      "D. Mudar o parâmetro gather_facts para 'debug'."
+      "C. Alterar as configurações do firewall no host alvo para liberar portas de diagnóstico, permitindo que o Ansible capture e exiba informações detalhadas de execução.",
+      "D. Definir o parâmetro gather_facts como 'debug' no cabeçalho do play, o que ativa a coleta detalhada de fatos e exibe todas as variáveis do sistema no terminal."
     ],
     correta: "B",
     explicacao: "B é a correta. A verbosidade vai de -v (aviso) até -vvvv (debug de conexão, onde até as chaves SSH e plugins de autenticação são exibidos na tela)."
@@ -1523,9 +1523,9 @@ const questionBank = [
     pergunta: "Quando testamos Roles usando o Ansible Molecule, existe um arquivo fundamental na estrutura do molecule que descreve as dependências, os provedores de infraestrutura (ex: podman, docker, ec2) e a verificação. Como se chama esse arquivo?",
     opcoes: [
       "A. molecule.yml",
-      "B. tests/main.yml",
-      "C. meta/molecule.json",
-      "D. requirements.yml"
+      "B. tests/main.yml, o arquivo principal de testes criado automaticamente pelo Molecule dentro do diretório de testes de integração da role sendo validada",
+      "C. meta/molecule.json, um arquivo JSON gerado automaticamente pelo Molecule no diretório meta da role, contendo a matriz de testes, drivers e configurações de lint",
+      "D. requirements.yml, o arquivo padrão de dependências do Ansible Galaxy que o Molecule usa para instalar as roles e collections necessárias antes de iniciar os testes"
     ],
     correta: "A",
     explicacao: "A é a correta. O arquivo 'molecule.yml' (localizado normalmente em `molecule/default/molecule.yml`) define a matriz do teste, qual driver usar, opções de linting e o host do inventário efêmero a ser criado."
@@ -1535,10 +1535,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Em uma pipeline de CI/CD (ex: GitLab CI), qual comando deve ser evitado ou usado com extrema cautela pois ele bloqueia e pausa a execução do Pipeline aguardando input do usuário?",
     opcoes: [
-      "A. ansible-playbook --syntax-check",
+      "A. ansible-playbook --syntax-check, pois ele tenta validar a estrutura YAML de forma interativa e pode bloquear o pipeline aguardando confirmação do operador",
       "B. Módulo ansible.builtin.pause ou tasks com vars_prompt",
-      "C. ansible-lint --strict",
-      "D. molecule test"
+      "C. ansible-lint --strict, porque em modo estrito o linter exige confirmação manual antes de reportar cada violação de regra encontrada nos arquivos do projeto",
+      "D. molecule test, já que o ciclo completo de testes do Molecule inclui etapas interativas de verificação que bloqueiam a pipeline aguardando input do usuário"
     ],
     correta: "B",
     explicacao: "B é a correta. O uso do módulo `pause` (com prompt para digitação) ou `vars_prompt` congela pipelines (que são processos desatendidos / sem TTY interativo ativo). Tentar ler um input do usuário em um executor de CI/CD faz o job pendurar até dar timeout."
@@ -1555,10 +1555,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Segundo o livro 'Ansible for DevOps', qual era o problema central que motivou a criação de ferramentas de gerenciamento de configuração como o Ansible?",
     opcoes: [
-      "A. Servidores físicos eram muito lentos comparados a VMs, exigindo automação.",
+      "A. Servidores físicos eram muito lentos e caros para provisionar comparados a VMs, tornando inviável o gerenciamento manual e exigindo ferramentas de automação dedicadas.",
       "B. Administradores gerenciavam servidores manualmente e não conseguiam escalar esse processo à medida que o número de servidores crescia.",
-      "C. A linguagem YAML não existia e precisava ser criada para suportar os scripts de automação.",
-      "D. O SSH ainda não tinha sido inventado, impedindo o acesso remoto a servidores."
+      "C. A linguagem YAML ainda não existia como padrão e precisava ser desenvolvida especificamente para permitir a descrição declarativa de scripts de automação de infraestrutura.",
+      "D. O protocolo SSH ainda não estava disponível na época, o que tornava impossível o acesso remoto seguro e automatizado a servidores físicos e virtuais em escala."
     ],
     correta: "B",
     explicacao: "B é a correta. O livro descreve que, historicamente, sysadmins gerenciavam servidores manualmente. Com o crescimento dos data centers e a virtualização, escalar esse processo manual tornou-se inviável. Ferramentas de gerenciamento de configuração surgiram para resolver exatamente essa lacuna."
@@ -1568,10 +1568,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O Ansible foi lançado por Michael DeHaan em que ano, conforme descrito no livro 'Ansible for DevOps'?",
     opcoes: [
-      "A. 2008",
-      "B. 2010",
+      "A. 2008, quando Michael DeHaan ainda trabalhava na Red Hat desenvolvendo o Cobbler e começou os primeiros protótipos de uma ferramenta de automação baseada em SSH",
+      "B. 2010, ano em que Michael DeHaan publicou os primeiros commits do projeto no GitHub após deixar a Red Hat para focar no desenvolvimento de uma nova ferramenta de automação",
       "C. 2012",
-      "D. 2015"
+      "D. 2015, data em que a Red Hat concluiu a aquisição da Ansible, Inc. e passou a distribuir o projeto como parte do portfólio oficial de automação da empresa"
     ],
     correta: "C",
     explicacao: "C é a correta. O Ansible foi lançado em fevereiro de 2012 por Michael DeHaan, que se inspirou em experiências anteriores com ferramentas como Cobbler e Func, e em observações sobre os problemas com as ferramentas de gerenciamento de configuração existentes na época."
@@ -1594,10 +1594,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O Ansible por padrão assume que a autenticação SSH é feita com qual método, conforme destacado no livro?",
     opcoes: [
-      "A. Usuário e senha digitados no terminal interativamente.",
+      "A. Usuário e senha fornecidos interativamente no terminal a cada conexão, com suporte ao flag --ask-pass para solicitar a credencial antes de iniciar o play.",
       "B. Autenticação baseada em chaves (passwordless/key-based), sem necessidade de senha.",
-      "C. Kerberos com Active Directory integrado.",
-      "D. Token OAuth2 via API REST."
+      "C. Kerberos integrado ao Active Directory corporativo, onde o ticket de autenticação é obtido automaticamente pelo Ansible via kinit antes de cada sessão SSH remota.",
+      "D. Token OAuth2 gerado pela API REST do Automation Controller e injetado automaticamente nas conexões SSH como credencial de autenticação para os hosts gerenciados."
     ],
     correta: "B",
     explicacao: "B é a correta. O livro enfatiza explicitamente que 'todo o livro assume autenticação sem senha (key-based)'. Se você precisar de senhas, deve usar o flag `--ask-pass (-k)`, e possivelmente instalar o pacote `sshpass`."
@@ -1635,10 +1635,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "No Vagrantfile, qual bloco de configuração é usado para integrar o provisionamento com Ansible?",
     opcoes: [
-      "A. config.vm.ansible = 'playbook.yml'",
+      "A. config.vm.ansible = 'playbook.yml', a diretiva de atribuição direta usada no Vagrantfile para especificar o provisionador Ansible e o playbook a ser executado na VM",
       "B. config.vm.provision 'ansible' do |ansible|; ansible.playbook = 'playbook.yml'; end",
-      "C. ansible.provision config.vm, playbook: 'playbook.yml'",
-      "D. config.ansible.run 'playbook.yml'"
+      "C. ansible.provision config.vm, playbook: 'playbook.yml', a forma de invocação direta do provisionador Ansible usando a sintaxe de chamada de método do Ruby no Vagrantfile",
+      "D. config.ansible.run 'playbook.yml', o método shorthand introduzido no Vagrant 2.x para configurar o provisionador Ansible sem a necessidade de um bloco de configuração completo"
     ],
     correta: "B",
     explicacao: "B é a correta. A integração Vagrant+Ansible usa o bloco `config.vm.provision 'ansible' do |ansible| ... end` dentro do Vagrantfile (que usa sintaxe Ruby). Dentro do bloco, `ansible.playbook` especifica o arquivo de playbook a executar."
@@ -1661,10 +1661,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "No primeiro playbook do livro, quais são as duas tarefas demonstradas para mostrar a idempotência do Ansible?",
     opcoes: [
-      "A. Instalar e iniciar o serviço Apache (httpd).",
+      "A. Instalar o pacote httpd via módulo yum e garantir que o serviço Apache esteja ativo e habilitado no boot, demonstrando a idempotência do módulo service do Ansible.",
       "B. Instalar e iniciar o serviço NTP (ntpd).",
-      "C. Criar um usuário e configurar o firewall (iptables).",
-      "D. Instalar o Python e configurar o ansible.cfg."
+      "C. Criar um usuário dedicado via módulo user e configurar regras do firewall com o módulo iptables para liberar as portas necessárias ao serviço em execução.",
+      "D. Instalar o interpretador Python nos hosts remotos via módulo raw e gerar automaticamente o arquivo ansible.cfg com as configurações otimizadas para o ambiente."
     ],
     correta: "B",
     explicacao: "B é a correta. O primeiro playbook do livro usa o módulo `yum` para instalar o NTP (`name=ntp state=present`) e o módulo `service` para garantir que o serviço ntpd esteja rodando e habilitado no boot. Esse exemplo simples demonstra a natureza declarativa e idempotente do Ansible."
@@ -1676,10 +1676,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "qual é a diferença fundamental entre um comando 'ad-hoc' e um 'playbook' do Ansible?",
     opcoes: [
-      "A. Comandos ad-hoc usam YAML, enquanto playbooks usam JSON.",
+      "A. Comandos ad-hoc são escritos em YAML diretamente na linha de comando, enquanto playbooks usam JSON estruturado para definir as tasks e variáveis de cada play.",
       "B. Comandos ad-hoc executam uma única tarefa diretamente pela CLI sem necessidade de arquivo YAML, sendo ideais para tarefas rápidas e pontuais.",
-      "C. Playbooks só funcionam em ambientes cloud, enquanto ad-hoc funciona apenas em servidores físicos.",
-      "D. Não há diferença prática; ambos rodam o mesmo código internamente."
+      "C. Playbooks são projetados exclusivamente para ambientes de cloud pública como AWS e Azure, enquanto comandos ad-hoc funcionam apenas em infraestrutura física on-premise.",
+      "D. Não há diferença prática entre os dois formatos; internamente o Ansible converte qualquer comando ad-hoc em um playbook temporário antes de executar nos hosts."
     ],
     correta: "B",
     explicacao: "B é a correta. Comandos ad-hoc (`ansible [hosts] -m [módulo]`) são perfeitos para tarefas únicas e rápidas (verificar disco, reiniciar serviço, copiar arquivo). Playbooks são arquivos YAML que orquestram múltiplas tarefas de forma repetível e documentada, ideais para configuração completa de sistemas."
@@ -1702,10 +1702,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Para recuperar (baixar) um arquivo de todos os servidores remotos para o nó de controle via ad-hoc, qual módulo Ansible você deve usar?",
     opcoes: [
-      "A. copy",
-      "B. transfer",
+      "A. copy, que além de enviar arquivos do nó de controle para os hosts remotos também suporta o modo reverso para recuperar arquivos dos servidores gerenciados",
+      "B. transfer, o módulo bidirecional do Ansible responsável por mover arquivos tanto do nó de controle para os hosts remotos quanto no sentido inverso de forma eficiente",
       "C. fetch",
-      "D. pull"
+      "D. pull, o módulo nativo do Ansible projetado especificamente para recuperar arquivos dos hosts remotos e armazená-los em diretórios organizados no nó de controle"
     ],
     correta: "C",
     explicacao: "C é a correta. O módulo `fetch` faz o inverso do `copy`: ele busca arquivos dos hosts remotos e os traz para o nó de controle, organizando-os geralmente em subdiretórios com o nome do host. Útil para coletar logs ou configurações atuais."
@@ -1715,10 +1715,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "discute os modos de conexão SSH do Ansible. Qual era o modo padrão de conexão antes do OpenSSH com ControlMaster ser adotado como padrão?",
     opcoes: [
-      "A. WinRM",
-      "B. Telnet",
+      "A. WinRM (Windows Remote Management), o protocolo padrão de comunicação remota usado pelo Ansible antes da adoção do OpenSSH, compatível com ambientes Linux e Windows",
+      "B. Telnet, o protocolo de acesso remoto utilizado pelo Ansible nos primórdios do projeto para comunicação com hosts Linux sem necessidade de configuração de chaves SSH",
       "C. Paramiko (uma implementação Python de SSH)",
-      "D. SFTP nativo"
+      "D. SFTP nativo do sistema operacional, que o Ansible usava como canal padrão de comunicação remota para executar módulos e transferir arquivos aos hosts gerenciados"
     ],
     correta: "C",
     explicacao: "C é a correta. Antes do OpenSSH se tornar o padrão, o Ansible usava o Paramiko — uma implementação Python do protocolo SSH — como sua biblioteca de conexão padrão. O OpenSSH com ControlMaster (multiplexação de conexões) tornou-se padrão posteriormente, sendo muito mais eficiente."
@@ -1769,10 +1769,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "ao executar `ansible-playbook`, qual flag permite limitar a execução a um subconjunto específico de hosts do inventário (ex: apenas um servidor em vez do grupo inteiro)?",
     opcoes: [
-      "A. --host",
-      "B. --filter",
+      "A. --host, o parâmetro do ansible-playbook usado para especificar um endereço IP ou hostname único que substituirá o inventário completo durante a execução",
+      "B. --filter, a opção do ansible-playbook que aplica um filtro regex sobre os grupos do inventário para selecionar apenas os hosts que correspondem ao padrão informado",
       "C. --limit",
-      "D. --target"
+      "D. --target, o argumento do ansible-playbook introduzido na versão 2.9 para direcionar a execução a um host ou grupo específico sem alterar o arquivo de inventário"
     ],
     correta: "C",
     explicacao: "C é a correta. O flag `--limit` (ou `-l`) restringe a execução a um padrão de host específico. Exemplo: `ansible-playbook site.yml --limit webserver01` executa o playbook apenas no host 'webserver01', mesmo que o inventário contenha centenas de servidores."
@@ -1782,10 +1782,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Para executar um playbook como um usuário diferente (com privilégios de root via sudo), quais dois parâmetros do ansible-playbook são usados?",
     opcoes: [
-      "A. --root e --su",
+      "A. --root para indicar que o playbook deve rodar como superusuário e --su para especificar o método de escalada de privilégios a ser utilizado nos hosts remotos",
       "B. --become-user e --become (ou o antigo --sudo e --sudo-user)",
-      "C. --user=root e --no-prompt",
-      "D. --privilege-escalation e --as-user"
+      "C. --user=root para definir o usuário de execução como root diretamente e --no-prompt para suprimir qualquer solicitação de senha durante a escalada de privilégios",
+      "D. --privilege-escalation para ativar a escalada de privilégios no playbook e --as-user para indicar o usuário alvo, disponíveis a partir do Ansible Core 2.8"
     ],
     correta: "B",
     explicacao: "B é a correta. Nas versões modernas do Ansible, `--become` ativa a escalada de privilégios (equivalente ao antigo --sudo) e `--become-user` define o usuário alvo (padrão: root). No Ansible mais antigo (como no livro), os flags eram `--sudo` e `--sudo-user`."
@@ -1797,8 +1797,8 @@ const questionBank = [
     opcoes: [
       "A. apt_repository",
       "B. yum_repository",
-      "C. rpm_key",
-      "D. shell (executando rpm -ivh diretamente)"
+      "C. rpm_key, que além de importar chaves GPG para validação de pacotes também gerencia a adição e remoção de repositórios externos em sistemas baseados em RPM",
+      "D. módulo shell com o comando rpm -ivh para instalar o pacote RPM do repositório e depois configurar manualmente o arquivo .repo em /etc/yum.repos.d/ no host alvo"
     ],
     correta: "B",
     explicacao: "B é a correta. O módulo `yum_repository` gerencia repositórios yum/dnf de forma idempotente em sistemas Red Hat/CentOS. Para distribuições Debian/Ubuntu, o equivalente seria `apt_repository`."
@@ -1808,10 +1808,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "No playbook de exemplo do livro para um servidor Drupal/LAMP, qual módulo Ansible é usado para modificar uma linha específica em um arquivo de configuração (ex: alterar `memory_limit` no php.ini)?",
     opcoes: [
-      "A. replace",
-      "B. template",
+      "A. replace, o módulo Ansible que realiza substituições de padrões regex em arquivos de configuração e é a forma recomendada para alterar múltiplas ocorrências de uma linha",
+      "B. template, que renderiza um arquivo Jinja2 completo com as configurações desejadas e o distribui para o host remoto substituindo integralmente o arquivo original",
       "C. lineinfile",
-      "D. file_edit"
+      "D. file_edit, um módulo do Ansible Collections que oferece suporte a edições estruturadas em arquivos INI, YAML e de configuração genérica nos hosts gerenciados"
     ],
     correta: "C",
     explicacao: "C é a correta. O módulo `lineinfile` garante que uma linha específica existe (ou não) em um arquivo. No exemplo do livro, ele é usado para modificar configurações do php.ini. O `regexp` define qual linha substituir e `line` define o novo conteúdo."
@@ -1823,10 +1823,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O que é um 'Handler' no Ansible e quando ele é executado?",
     opcoes: [
-      "A. Um handler é um módulo especial que lida com erros; ele roda sempre que uma task falha.",
+      "A. Um handler é um módulo especial de recuperação de erros; ele é executado automaticamente sempre que qualquer task do play retorna o status de falha nos hosts.",
       "B. Um handler é uma task especial que só é executada quando notificada por outra task que registrou uma mudança (changed); ele roda ao final do play.",
-      "C. Um handler é um plugin de callback que monitora a execução do playbook em tempo real.",
-      "D. Um handler é uma variável especial que armazena o resultado de tarefas anteriores."
+      "C. Um handler é um plugin de callback registrado no ansible.cfg que monitora e registra cada evento de execução do playbook em tempo real, incluindo mudanças e falhas.",
+      "D. Um handler é uma variável especial do tipo dict que captura e armazena automaticamente o resultado completo de todas as tarefas anteriores para uso condicional."
     ],
     correta: "B",
     explicacao: "B é a correta. Handlers são tasks especiais acionados via `notify`. Eles só executam se a task que os notificou gerou uma mudança (`changed`). Múltiplas notificações ao mesmo handler durante um play resultam em apenas uma execução, ao final do play. Perfeito para reiniciar serviços apenas quando necessário."
@@ -1836,10 +1836,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "qual é a forma correta de usar 'variáveis registradas' (registered variables) para capturar a saída de um comando e usá-la em uma task condicional?",
     opcoes: [
-      "A. Usar `output: nome_variavel` na task e depois `if output.stdout` na task seguinte.",
+      "A. Usar a diretiva `output: nome_variavel` para capturar o resultado da task e referenciá-lo com `if output.stdout contains` nas tasks seguintes que dependem desse dado.",
       "B. Usar `register: nome_variavel` na task e depois `when: nome_variavel.stdout` na task seguinte.",
-      "C. Usar `save_output: nome_variavel` e acessar com `{{ saved.nome_variavel }}`.",
-      "D. Usar `capture: nome_variavel` e acessar com `vars.nome_variavel`."
+      "C. Usar `save_output: nome_variavel` para persistir o resultado da execução e acessá-lo nas tasks seguintes através da sintaxe `{{ saved.nome_variavel.stdout }}`.",
+      "D. Usar a diretiva `capture: nome_variavel` introduzida no Ansible 2.11 e acessar o resultado capturado através do namespace `vars.nome_variavel.rc` nas condicionais."
     ],
     correta: "B",
     explicacao: "B é a correta. A diretiva `register` captura o resultado completo de uma task em uma variável (contendo stdout, stderr, rc, etc.). Essa variável pode ser usada em tasks subsequentes com `when: nome_variavel.rc == 0` ou `when: \"'texto' in nome_variavel.stdout\"`."
@@ -1849,10 +1849,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O Ansible Vault serve para qual finalidade principal?",
     opcoes: [
-      "A. Armazenar o histórico criptografado de todas as execuções de playbooks.",
+      "A. Armazenar e auditar o histórico completo de execuções de playbooks em formato criptografado AES-256, permitindo revisão e rastreamento de todas as automações realizadas.",
       "B. Criptografar dados sensíveis (senhas, chaves de API, certificados) armazenados em arquivos de variáveis YAML para que possam ser incluídos com segurança no controle de versão (Git).",
-      "C. Gerenciar certificados TLS/SSL para as conexões SSH entre o Ansible e os hosts remotos.",
-      "D. Fazer backup automático dos arquivos de configuração nos servidores gerenciados."
+      "C. Gerenciar e renovar automaticamente certificados TLS/SSL utilizados para autenticar e criptografar as conexões SSH estabelecidas entre o nó de controle e os hosts.",
+      "D. Fazer backup automático e criptografado dos arquivos de configuração alterados nos servidores gerenciados, armazenando-os com controle de versão no nó de controle."
     ],
     correta: "B",
     explicacao: "B é a correta. O Ansible Vault usa criptografia AES-256 para proteger arquivos YAML inteiros ou valores específicos de variáveis. Assim, senhas de banco de dados e chaves secretas podem ser versionadas com segurança no Git sem exposição."
@@ -1862,10 +1862,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "qual diretiva permite que uma task defina seu próprio critério de 'falha', ao invés de depender do código de retorno (rc) padrão do comando?",
     opcoes: [
-      "A. ignore_errors: yes",
+      "A. ignore_errors: yes, que instrui o Ansible a continuar a execução do playbook mesmo quando a task retorna um código de saída diferente de zero nos hosts remotos",
       "B. failed_when",
-      "C. on_error: continue",
-      "D. error_handling: custom"
+      "C. on_error: continue, a diretiva de controle de fluxo que define o comportamento do Ansible quando uma task retorna erro, permitindo personalizar a condição de falha",
+      "D. error_handling: custom, o parâmetro de configuração do ansible.cfg que ativa o modo de tratamento personalizado de erros com critérios definidos por expressão Jinja2"
     ],
     correta: "B",
     explicacao: "B é a correta. `failed_when` permite customizar a condição de falha. Por exemplo: `failed_when: \"'ERROR' in result.stderr\"` fará a task falhar somente se a string 'ERROR' aparecer no stderr, independentemente do código de retorno."
@@ -1875,10 +1875,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "A diretiva `changed_when: false`, demonstrada é mais comumente usada em qual situação?",
     opcoes: [
-      "A. Para forçar que uma task seja sempre marcada como 'changed', mesmo que nada tenha mudado.",
+      "A. Para forçar que uma task seja sempre marcada como 'changed' independente do resultado, garantindo que todos os handlers associados sejam notificados e executados.",
       "B. Para tasks de verificação/leitura (como scripts que apenas consultam dados) que nunca devem fazer alterações no sistema e, portanto, nunca devem ser reportadas como 'changed'.",
-      "C. Para desativar os handlers mesmo quando ocorrem mudanças.",
-      "D. Para ignorar completamente os erros de uma task."
+      "C. Para suprimir a notificação e execução de handlers associados à task, mesmo quando ela realiza alterações reais nos arquivos ou configurações dos hosts gerenciados.",
+      "D. Para ignorar todos os erros e falhas retornados pela task, permitindo que o playbook continue a execução nos próximos hosts sem interromper o fluxo do play."
     ],
     correta: "B",
     explicacao: "B é a correta. `changed_when: false` é ideal para tasks de leitura pura — como consultar versões instaladas ou verificar o status de algo — que o Ansible incorretamente reportaria como 'changed'. Isso garante que handlers não sejam acionados desnecessariamente."
@@ -1888,10 +1888,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "As 'Tags' no Ansible servem para qual propósito prático?",
     opcoes: [
-      "A. Identificar os servidores no inventário com metadados de ambiente (produção, staging).",
+      "A. Marcar hosts no arquivo de inventário com metadados de ambiente como produção e staging, permitindo filtrar e direcionar a execução a grupos específicos de servidores.",
       "B. Permitir executar apenas um subconjunto de tasks de um playbook usando `--tags` ou `--skip-tags` na linha de comando.",
-      "C. Versionar automaticamente os playbooks usando timestamps.",
-      "D. Notificar outros times via Slack quando uma tag específica é executada."
+      "C. Adicionar timestamps e metadados de versão automaticamente a cada execução dos playbooks, criando um histórico auditável das mudanças aplicadas nos hosts gerenciados.",
+      "D. Acionar notificações automáticas via Slack ou webhook sempre que uma task marcada com uma tag específica é executada com sucesso ou falha no playbook em execução."
     ],
     correta: "B",
     explicacao: "B é a correta. Tags permitem granularidade na execução: `ansible-playbook site.yml --tags 'packages'` roda apenas as tasks marcadas com a tag 'packages'. `--skip-tags 'deploy'` pula as tasks de deploy. Muito útil para rodar apenas partes de playbooks longos durante desenvolvimento."
@@ -1901,10 +1901,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "Os 'Blocks' do Ansible adicionam qual capacidade importante à estruturação de playbooks?",
     opcoes: [
-      "A. Permitir a execução paralela de grupos de tasks usando threads.",
+      "A. Permitir a execução paralela e assíncrona de grupos de tasks dentro do mesmo play, usando threads independentes para acelerar o processamento em hosts com alto throughput.",
       "B. Agrupar logicamente múltiplas tasks e aplicar diretivas comuns (when, become, tags) ao grupo, além de suportar tratamento de erros com `rescue` e `always`.",
-      "C. Criar sub-playbooks independentes que podem ser executados separadamente.",
-      "D. Bloquear a execução de outros playbooks enquanto o bloco atual está em andamento."
+      "C. Definir sub-playbooks reutilizáveis com escopo isolado dentro do play principal, podendo ser executados de forma independente via linha de comando com parâmetros próprios.",
+      "D. Implementar travas de execução no Control Node que bloqueiam o início de outros playbooks enquanto o bloco atual ainda está em andamento nos hosts gerenciados."
     ],
     correta: "B",
     explicacao: "B é a correta. Blocks permitem: (1) aplicar `when`, `become`, `tags` a um grupo de tasks de uma vez; (2) estrutura try-catch-finally com `block`, `rescue` e `always`. O bloco `rescue` roda se qualquer task no `block` falhar, e `always` sempre roda independentemente."
@@ -1920,10 +1920,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "qual é a principal vantagem de usar 'Roles' do Ansible em vez de um único playbook monolítico?",
     opcoes: [
-      "A. Roles são até 10x mais rápidas de executar pois usam processamento paralelo interno.",
+      "A. Roles executam até 10x mais rápido que playbooks convencionais porque usam processamento paralelo interno com threading nativo, reduzindo o tempo total de provisioning.",
       "B. Roles organizam e encapsulam configurações relacionadas em estruturas reutilizáveis, permitindo compartilhamento e reutilização entre projetos e times.",
-      "C. Roles permitem escrever automação em Python puro em vez de YAML.",
-      "D. Roles eliminam completamente a necessidade do arquivo ansible.cfg."
+      "C. Roles permitem escrever a lógica de automação diretamente em módulos Python puros, eliminando a necessidade de YAML e oferecendo controle total sobre a execução.",
+      "D. Roles substituem inteiramente o arquivo ansible.cfg, incorporando todas as configurações de conexão, inventário e escalada de privilégios na própria estrutura da role."
     ],
     correta: "B",
     explicacao: "B é a correta. Roles são a unidade fundamental de reutilização no Ansible. Elas encapsulam tasks, handlers, defaults, vars, templates e arquivos em uma estrutura de diretório padronizada. Isso facilita compartilhamento via Ansible Galaxy e reutilização entre diferentes playbooks e projetos."
@@ -1933,10 +1933,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "Qual comando Ansible cria automaticamente o 'scaffolding' (esqueleto de diretórios) de uma nova Role com a estrutura correta?",
     opcoes: [
-      "A. ansible-playbook --create-role nome_da_role",
+      "A. ansible-playbook --create-role nome_da_role, o subcomando do ansible-playbook que gera automaticamente a estrutura de diretórios e arquivos padrão para uma nova role",
       "B. ansible-galaxy role init nome_da_role",
-      "C. ansible --new-role nome_da_role",
-      "D. ansible-vault create role/nome_da_role"
+      "C. ansible --new-role nome_da_role, a opção de linha de comando do ansible CLI que cria o scaffolding completo de uma nova role com tasks, handlers e defaults configurados",
+      "D. ansible-vault create role/nome_da_role, o comando que inicializa uma nova role com todos os arquivos de variáveis pré-criptografados e prontos para uso em produção"
     ],
     correta: "B",
     explicacao: "B é a correta. O comando `ansible-galaxy role init nome_da_role` (ou simplesmente `ansible-galaxy init`) cria automaticamente a estrutura completa de diretórios da role: tasks/, handlers/, defaults/, vars/, files/, templates/ e meta/."
@@ -1959,10 +1959,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "O Ansible Galaxy é descrito como qual tipo de serviço?",
     opcoes: [
-      "A. Um serviço de cloud computing para hospedar e executar playbooks.",
+      "A. Um serviço de cloud computing gerenciado pela Red Hat para hospedar, executar e monitorar playbooks Ansible em escala, com integração nativa ao Automation Controller.",
       "B. Um repositório público de Roles e Collections compartilhadas pela comunidade Ansible, onde você pode baixar e publicar automação reutilizável.",
-      "C. Uma ferramenta de monitoramento de saúde dos hosts gerenciados pelo Ansible.",
-      "D. Um registry privado de imagens de contêiner para Execution Environments."
+      "C. Uma plataforma de observabilidade e monitoramento de saúde dos hosts gerenciados pelo Ansible, com dashboards de métricas e alertas configuráveis por role e coleção.",
+      "D. Um registry privado corporativo para distribuição de imagens de Execution Environments, similar ao Docker Hub, mas integrado e gerenciado pelo Private Automation Hub."
     ],
     correta: "B",
     explicacao: "B é a correta. O Ansible Galaxy (galaxy.ansible.com) é o hub público de automação da Red Hat onde a comunidade compartilha Roles e Collections. O comando `ansible-galaxy install geerlingguy.apache` baixa a role 'apache' do usuário 'geerlingguy' do Galaxy."
@@ -1985,10 +1985,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "o livro demonstra que com o uso de roles do Galaxy, um servidor LAMP completo pode ser configurado com quantas linhas de YAML aproximadamente?",
     opcoes: [
-      "A. Cerca de 200 linhas",
-      "B. Cerca de 50 linhas",
+      "A. Cerca de 200 linhas de YAML, pois mesmo com roles do Galaxy ainda é necessário definir handlers, variáveis de grupo, templates e configurações específicas do ambiente",
+      "B. Cerca de 50 linhas de YAML, já que o playbook principal ainda precisa declarar as variáveis de ambiente, as dependências de roles e os parâmetros de cada componente LAMP",
       "C. Cerca de 8 linhas",
-      "D. Depende do OS; nunca menos que 30 linhas"
+      "D. No mínimo 30 linhas de YAML, variando conforme o sistema operacional alvo; distribuições baseadas em Debian exigem mais configurações que as baseadas em RedHat"
     ],
     correta: "C",
     explicacao: "C é a correta. O livro demonstra que ao usar roles do Ansible Galaxy (como geerlingguy.apache, geerlingguy.mysql, geerlingguy.php), um servidor LAMP completo pode ser descrito em apenas 8 linhas de YAML no playbook principal — ilustrando o poder da reutilização com roles."
@@ -1998,10 +1998,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "Qual é a diferença prática entre `include_tasks` (dinâmico) e `import_tasks` (estático) em termos de suporte a loops, conforme discutido no contexto de Roles e Includes?",
     opcoes: [
-      "A. `import_tasks` suporta loops com `loop:`, enquanto `include_tasks` não suporta.",
+      "A. `import_tasks` aceita a diretiva `loop:` para iterar sobre listas de arquivos de tasks, enquanto `include_tasks` só pode ser chamado uma vez por contexto de execução.",
       "B. `include_tasks` pode ser usado com `loop:` para incluir o arquivo de tasks múltiplas vezes com diferentes variáveis, enquanto `import_tasks` não pode ser iterado.",
-      "C. Ambos suportam loops da mesma forma.",
-      "D. Nenhum dos dois suporta loops; loops só funcionam em tasks individuais."
+      "C. Ambos suportam a diretiva `loop:` da mesma forma; a diferença é apenas sintática e não afeta o comportamento em tempo de execução quando usados com iterações.",
+      "D. Nenhum dos dois aceita a diretiva `loop:` nativamente; para iterar inclusões de tasks é necessário usar o módulo `ansible.builtin.include` depreciado da versão 2.4."
     ],
     correta: "B",
     explicacao: "B é a correta. Como `include_tasks` é processado em tempo de execução (dinamicamente), ele pode ser usado dentro de um `loop`. Já `import_tasks` é pré-processado antes da execução (estaticamente), portanto não pode ser iterado — é como tentar adicionar um loop a um `import` antes da execução começar."
@@ -2013,10 +2013,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "Qual é a diferença fundamental entre `host_vars` e `group_vars` em inventários Ansible?",
     opcoes: [
-      "A. `host_vars` define variáveis para sistemas operacionais específicos, `group_vars` para regiões de cloud.",
+      "A. `host_vars` armazena variáveis específicas para cada sistema operacional suportado no inventário, enquanto `group_vars` define configurações para regiões de cloud provider.",
       "B. `host_vars` define variáveis que se aplicam a um host específico, enquanto `group_vars` define variáveis que se aplicam a todos os hosts de um grupo.",
-      "C. `host_vars` é para ambientes de produção e `group_vars` para desenvolvimento.",
-      "D. Não há diferença; ambos armazenam variáveis no mesmo nível de precedência."
+      "C. `host_vars` contém variáveis exclusivas do ambiente de produção para maior segurança, enquanto `group_vars` agrupa variáveis compartilhadas entre ambientes de desenvolvimento.",
+      "D. Não há diferença prática entre os dois; ambos armazenam variáveis com o mesmo nível de precedência na hierarquia do Ansible, podendo ser usados de forma intercambiável."
     ],
     correta: "B",
     explicacao: "B é a correta. `host_vars/[hostname].yml` define variáveis exclusivas de um host específico (ex: IP interno, porta de serviço única). `group_vars/[groupname].yml` define variáveis compartilhadas por todos os hosts do grupo (ex: versão do pacote, configuração comum). Host vars sobrescrevem group vars."
@@ -2026,10 +2026,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "introduz 'Inventários Dinâmicos'. Em qual cenário eles são essencialmente necessários?",
     opcoes: [
-      "A. Quando você tem menos de 10 servidores estáticos e quer simplificar o inventário.",
+      "A. Quando você gerencia menos de 10 servidores estáticos com IPs fixos e quer evitar a duplicação e manutenção manual de múltiplos arquivos .ini em diferentes ambientes.",
       "B. Em infraestrutura efêmera (como instâncias EC2 ou DigitalOcean) onde os servidores são criados e destruídos frequentemente e um arquivo de inventário estático se tornaria desatualizado rapidamente.",
-      "C. Apenas quando o Ansible é executado no Windows como nó de controle.",
-      "D. Quando os playbooks precisam rodar mais de 1000 forks em paralelo."
+      "C. Exclusivamente em ambientes onde o Ansible roda no Windows via WSL, pois os arquivos de inventário estático no formato INI não são processados corretamente pelo subsistema.",
+      "D. Quando os playbooks precisam processar mais de 1000 hosts com forks elevados acima de 50, já que arquivos de inventário estático causam gargalos de I/O nessa escala."
     ],
     correta: "B",
     explicacao: "B é a correta. Inventários dinâmicos são scripts (Python, PHP, etc.) ou plugins que consultam APIs externas (AWS, GCP, Azure, DigitalOcean) em tempo real para construir o inventário. Em ambientes de cloud onde IPs e instâncias mudam constantemente, um arquivo .ini estático se torna impraticável."
@@ -2052,10 +2052,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "O módulo `group_by` do Ansible serve para qual finalidade?",
     opcoes: [
-      "A. Agrupar múltiplos handlers para execução simultânea.",
+      "A. Agrupar múltiplos handlers do playbook para execução simultânea ao final do play, evitando notificações duplicadas quando várias tasks notificam o mesmo handler.",
       "B. Criar grupos de inventário dinâmicos durante a execução do playbook com base em fatos dos hosts (ex: criar grupos separados para CentOS e Ubuntu).",
-      "C. Agrupar variáveis de múltiplos arquivos group_vars em um único namespace.",
-      "D. Agrupar tarefas relacionadas para aplicar uma tag comum a todas elas."
+      "C. Consolidar variáveis definidas em múltiplos arquivos group_vars em um único namespace de variáveis acessível para todas as tasks do play em execução.",
+      "D. Agrupar tasks relacionadas dentro de um bloco lógico para aplicar uma tag comum a todas elas, simplificando a execução seletiva via --tags na linha de comando."
     ],
     correta: "B",
     explicacao: "B é a correta. O `group_by` cria grupos durante a execução baseando-se em fatos coletados. Exemplo: `group_by: key=os_{{ ansible_facts['distribution'] }}` cria grupos como 'os_CentOS' e 'os_Ubuntu' dinamicamente, permitindo que plays posteriores usem esses grupos para aplicar tasks específicas por SO."
@@ -2082,10 +2082,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "No Ansible, templates Jinja2 (arquivos .j2) são processados pelo módulo `template`. Qual é a principal diferença entre usar `template` e usar `copy` para distribuir um arquivo de configuração?",
     opcoes: [
-      "A. `copy` é mais seguro pois criptografa o arquivo durante a transferência; `template` não criptografa.",
+      "A. `copy` é mais seguro pois usa criptografia end-to-end na transferência do arquivo; o `template` transmite o conteúdo renderizado em texto plano pela conexão SSH.",
       "B. `template` processa o arquivo com o motor Jinja2, substituindo variáveis e expressões antes de enviar ao host remoto; `copy` transfere o arquivo sem modificações.",
-      "C. `copy` só funciona com arquivos binários, `template` apenas com arquivos de texto.",
-      "D. Não há diferença funcional; ambos são intercambiáveis."
+      "C. O módulo `copy` é exclusivo para arquivos binários como imagens e executáveis compilados, enquanto `template` processa apenas arquivos de texto estruturado e configs.",
+      "D. Não há diferença funcional relevante entre os dois módulos; ambos transferem arquivos de forma idempotente e podem ser usados de forma intercambiável em qualquer task."
     ],
     correta: "B",
     explicacao: "B é a correta. O módulo `template` renderiza o arquivo .j2 com o Jinja2 antes de copiá-lo: substitui `{{ variavel }}`, processa `{% if %}`, `{% for %}`, etc. O `copy` simplesmente transfere o arquivo byte a byte, sem qualquer processamento ou substituição de variáveis."
@@ -2095,10 +2095,10 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "No contexto de Roles, qual é a diferença de precedência entre variáveis definidas em `defaults/main.yml` e variáveis em `vars/main.yml`?",
     opcoes: [
-      "A. Ambos têm a mesma precedência; a última definição vence.",
+      "A. Ambos têm a mesma precedência na hierarquia do Ansible; quando há conflito, a última definição encontrada durante o parsing do playbook é a que prevalece em runtime.",
       "B. `vars/main.yml` tem precedência MAIOR que `defaults/main.yml`, tornando difícil para o usuário da role sobrescrever as vars, enquanto defaults são facilmente sobrescrevíveis.",
-      "C. `defaults/main.yml` tem precedência sobre `vars/main.yml` e sobre qualquer outra variável no sistema.",
-      "D. Não existe `vars/main.yml` em roles; apenas `defaults/main.yml` é suportado."
+      "C. `defaults/main.yml` tem precedência maior que `vars/main.yml` e sobrescreve qualquer variável de inventário, extra_vars ou variáveis definidas nos arquivos do play.",
+      "D. O diretório `vars/` não existe na estrutura padrão de roles; todas as variáveis devem ser definidas exclusivamente em `defaults/main.yml` para garantir a portabilidade."
     ],
     correta: "B",
     explicacao: "B é a correta. `defaults/` tem a menor precedência de toda a hierarquia do Ansible — são apenas valores padrão que qualquer outra fonte sobrescreve facilmente. `vars/` tem precedência muito mais alta e é difícil de sobrescrever (requer extra_vars ou variáveis de playbook com precedência ainda maior)."
@@ -2112,10 +2112,10 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "O livro 'Ansible for DevOps' descreve o Ansible Tower (antecessor do Automation Controller do AAP) como sendo essencialmente qual tipo de produto?",
     opcoes: [
-      "A. Um compilador de playbooks YAML para binários executáveis.",
+      "A. Um compilador que converte playbooks YAML em binários Python executáveis otimizados, permitindo execução sem dependência do Ansible instalado nos nós de controle.",
       "B. Uma interface web e API REST que adiciona RBAC, agendamento de jobs, inventários dinâmicos e auditoria de execução ao Ansible open source.",
-      "C. Um sistema operacional otimizado para rodar Ansible em containers.",
-      "D. Um substituto completo do Ansible que usa uma linguagem própria de automação."
+      "C. Um sistema operacional baseado em RHEL otimizado e certificado pela Red Hat para hospedar e executar o Ansible Core em ambientes de container isolados e seguros.",
+      "D. Um substituto completo que reescreve o Ansible com linguagem própria de automação declarativa, eliminando a dependência de YAML e oferecendo tipagem estática de variáveis."
     ],
     correta: "B",
     explicacao: "B é a correta. O Ansible Tower (hoje Automation Controller no AAP) adiciona uma camada enterprise sobre o Ansible core: interface web, API RESTful, RBAC granular, agendamento de jobs, inventários dinâmicos, log centralizado e integração com sistemas externos. O controller é a evolução direta do Tower."
@@ -2125,10 +2125,10 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "qual é uma das principais vantagens do Ansible Tower em relação a simplesmente executar ansible-playbook manualmente via CLI?",
     opcoes: [
-      "A. Tower compila os playbooks em bytecode Python para execução mais rápida.",
+      "A. Tower pré-compila automaticamente os playbooks em bytecode Python otimizado, reduzindo o tempo de inicialização e aumentando a velocidade de execução nos nós remotos.",
       "B. Tower oferece auditoria completa de quem executou o quê e quando, além de centralizar credenciais sem exposição a usuários finais.",
-      "C. Tower elimina a necessidade de um arquivo de inventário, gerando hosts automaticamente via IA.",
-      "D. Tower só funciona com AWS, tornando-o mais seguro para deployments em cloud."
+      "C. Tower usa algoritmos de descoberta automática e inteligência artificial para gerar e manter o inventário de hosts atualizado sem necessidade de arquivos estáticos ou scripts.",
+      "D. Tower é certificado e otimizado exclusivamente para implantações na AWS, utilizando IAM roles nativas e serviços gerenciados da Amazon para garantir máxima segurança."
     ],
     correta: "B",
     explicacao: "B é a correta. Uma das principais propostas de valor do Tower/Controller é a auditabilidade (log completo de cada execução) e o gerenciamento seguro de credenciais. Os operadores executam playbooks sem nunca ver as senhas — as credenciais ficam armazenadas criptografadas no Controller."
@@ -2142,10 +2142,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "O Jenkins CI, abordado como alternativa/complemento ao Tower, é descrito como qual tipo de ferramenta?",
     opcoes: [
-      "A. Um servidor de inventário dinâmico para Ansible.",
+      "A. Um servidor dedicado de inventário dinâmico que consulta APIs de cloud em tempo real e fornece listas de hosts atualizadas diretamente para os playbooks do Ansible.",
       "B. Um servidor de automação open source focado em CI/CD, que pode disparar playbooks Ansible como parte de pipelines de build e deploy.",
-      "C. Uma ferramenta de monitoramento de infraestrutura integrada ao Ansible.",
-      "D. Um substituto do Vagrant para criação de ambientes de desenvolvimento."
+      "C. Uma plataforma de monitoramento e observabilidade de infraestrutura com alertas configuráveis e integração nativa com playbooks Ansible para remediação automática.",
+      "D. Uma alternativa ao Vagrant para provisionamento e gerenciamento do ciclo de vida de ambientes de desenvolvimento locais, usando Ansible como provisionador nativo."
     ],
     correta: "B",
     explicacao: "B é a correta. O Jenkins é um servidor de automação CI/CD open source amplamente usado. No Capítulo 11, o livro mostra como configurar o Jenkins para criar 'jobs' que executam playbooks Ansible, integrando automação de infraestrutura aos pipelines de desenvolvimento."
@@ -2155,10 +2155,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "No contexto de RBAC do Ansible Tower/Controller, qual é o papel fundamental do RBAC para equipes de operações?",
     opcoes: [
-      "A. RBAC no Tower permite que qualquer usuário escreva playbooks em tempo real via interface web.",
+      "A. RBAC no Tower concede a todos os usuários autenticados a capacidade de criar e editar playbooks em tempo real pela interface web, sem restrições de acesso por objeto.",
       "B. RBAC permite delegar execução de automação a equipes ou indivíduos específicos, controlando o que cada um pode ver, executar ou modificar, sem expor credenciais ou código-fonte.",
-      "C. RBAC é usado para configurar o banco de dados interno do Tower em diferentes roles (master/slave).",
-      "D. RBAC no Tower define a prioridade de execução entre jobs concorrentes."
+      "C. RBAC no Tower define a topologia do banco de dados PostgreSQL interno, atribuindo roles de master e slave aos nós para garantir replicação e alta disponibilidade.",
+      "D. RBAC no Tower é utilizado para definir a ordem de prioridade e o peso de escalonamento entre jobs concorrentes, garantindo SLA de execução para equipes críticas."
     ],
     correta: "B",
     explicacao: "B é a correta. O RBAC do Tower/Controller é fundamental para ambientes enterprise: permite que a equipe de segurança dê ao time de NOC apenas o botão 'executar' em jobs específicos, sem acesso ao playbook, inventário ou credenciais subjacentes — aplicando o princípio de menor privilégio."
@@ -2181,10 +2181,10 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "O módulo `assert` do Ansible, usado em testes e validações de infraestrutura, serve para:",
     opcoes: [
-      "A. Declarar variáveis imutáveis (constantes) que não podem ser sobrescritas durante o play.",
+      "A. Declarar variáveis como imutáveis e constantes em escopo de play, impedindo que qualquer task subsequente ou extra_vars sobrescreva seus valores durante a execução.",
       "B. Verificar se uma condição é verdadeira e falhar o playbook com uma mensagem explicativa se não for, permitindo testes de validação de pré/pós-condições.",
-      "C. Garantir que um handler foi notificado pelo menos uma vez durante o play.",
-      "D. Confirmar a identidade do host remoto via verificação de chave SSH."
+      "C. Verificar que ao menos um handler foi notificado com sucesso durante o play e interromper a execução com mensagem de erro se nenhuma notificação tiver sido registrada.",
+      "D. Verificar criptograficamente a identidade e integridade do host remoto antes de executar qualquer task, comparando a fingerprint SSH com os valores registrados no known_hosts."
     ],
     correta: "B",
     explicacao: "B é a correta. O módulo `assert` avalia uma condição: `assert: that: result.rc == 0 fail_msg: 'O serviço não iniciou corretamente'`. É fundamental para testes de infraestrutura (Infrastructure as Code testing), garantindo que o estado do sistema está como esperado."
@@ -2198,10 +2198,10 @@ const questionBank = [
     dominio: "5.1",
     pergunta: "O livro 'Ansible for DevOps' discute Docker como plataforma de containers. Qual é a característica fundamental que diferencia containers Docker de VMs tradicionais?",
     opcoes: [
-      "A. Containers Docker têm um kernel próprio e isolamento total de hardware.",
+      "A. Containers Docker possuem kernel próprio isolado e virtualização completa de hardware, sendo equivalentes a VMs em termos de segurança e isolamento de processos.",
       "B. Containers compartilham o kernel do SO host, são muito mais leves e iniciam em segundos comparado a VMs que virtualizam hardware completo.",
-      "C. Containers Docker só funcionam em sistemas operacionais Windows.",
-      "D. Containers são mais seguros que VMs por padrão pois são sempre rootless."
+      "C. Containers Docker foram projetados exclusivamente para o Windows Server e dependem do Hyper-V; suporte a Linux é experimental e não recomendado para produção.",
+      "D. Containers são inerentemente mais seguros que VMs porque executam sempre em modo rootless por padrão, sem acesso ao namespace de rede ou ao sistema de arquivos do host."
     ],
     correta: "B",
     explicacao: "B é a correta. Containers compartilham o kernel do SO hospedeiro (isolados via namespaces e cgroups), tornando-os extremamente leves. Uma VM virtualiza hardware completo com seu próprio kernel, consumindo muito mais recursos. Essa leveza é central para o uso de containers em pipelines CI/CD e Execution Environments."
@@ -2243,10 +2243,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "qual diretiva de playbook permite controlar quantos hosts são atualizados por vez, garantindo uma atualização em 'rolling' (ondas) sem derrubar todos os servidores simultaneamente?",
     opcoes: [
-      "A. max_hosts",
-      "B. batch_size",
+      "A. max_hosts, o parâmetro de play que limita o número máximo de hosts processados simultaneamente em cada wave do rolling update, disponível a partir do Ansible 2.7",
+      "B. batch_size, a diretiva que define o tamanho de cada lote de hosts no rolling deployment, garantindo que apenas uma fração do inventário seja atualizada por ciclo",
       "C. serial",
-      "D. forks"
+      "D. forks, o parâmetro global do ansible.cfg que controla o paralelismo máximo de conexões SSH simultâneas e pode ser usado para limitar o impacto de atualizações em produção"
     ],
     correta: "C",
     explicacao: "C é a correta. A diretiva `serial` define quantos hosts são processados por vez. `serial: 1` processa um host por vez (mais seguro), `serial: '25%'` atualiza 25% do inventário por rodada. Fundamental para zero-downtime deployments atrás de load balancers."
@@ -2256,10 +2256,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Para um deploy com zero downtime em servidores atrás de um load balancer, qual sequência de ações o Ansible deve executar?",
     opcoes: [
-      "A. Atualizar todos os servidores simultaneamente e depois reiniciar o load balancer.",
+      "A. Fazer o deploy em todos os servidores ao mesmo tempo usando forks máximos e reiniciar o load balancer ao final para que ele detecte os backends atualizados.",
       "B. Remover o servidor do load balancer → fazer deploy → rodar testes de validação → reinserir no load balancer. Repetir em rolling.",
-      "C. Parar todos os servidores, atualizar o código, reiniciar todos ao mesmo tempo.",
-      "D. Usar apenas `serial: 0` para que o Ansible gerencie automaticamente a ordem."
+      "C. Parar todos os servidores do pool simultaneamente, aplicar o novo código e reiniciar todos ao mesmo tempo, minimizando a janela de indisponibilidade total.",
+      "D. Configurar `serial: 0` no play para que o Ansible calcule automaticamente a ordem de atualização e gerencie a retirada e reinserção dos hosts no load balancer."
     ],
     correta: "B",
     explicacao: "B é a correta. A estratégia de zero-downtime com load balancer é: (1) retirar o host do pool do LB, (2) fazer o deploy e testes de integração, (3) recolocar no pool. Com `serial: 1` ou `serial: '25%'`, isso é feito em ondas. O Ansible suporta isso com módulos de LB (HAProxy, AWS ELB, etc.) e o próprio módulo de `uri` para testes."
@@ -2269,10 +2269,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "O estilo de deploy 'Capistrano-style' mencionado é caracterizado por qual estratégia?",
     opcoes: [
-      "A. Deploy feito apenas durante janelas de manutenção programadas.",
+      "A. Estratégia em que o deploy só é executado durante janelas de manutenção noturnas programadas, com rollback automático ativado caso o serviço não suba em 30 minutos.",
       "B. Manter múltiplas versões da aplicação em diretórios timestampados no servidor, com um symlink apontando para a versão atual, permitindo rollback instantâneo.",
-      "C. Usar Docker swarm para gerenciar versões de containers automaticamente.",
-      "D. Deploy em uma única máquina de cada vez, sem paralelismo."
+      "C. Estratégia baseada em Docker Swarm que gerencia versões de containers automaticamente, fazendo rolling update dos serviços e revertendo para a imagem anterior em caso de falha.",
+      "D. Estratégia que atualiza um servidor por vez de forma estritamente sequencial, sem qualquer paralelismo, garantindo que apenas um nó esteja indisponível por vez."
     ],
     correta: "B",
     explicacao: "B é a correta. No estilo Capistrano (popularizado pela comunidade Ruby on Rails), múltiplas versões ficam em diretórios com timestamps (ex: releases/20240315120000/). Um symlink `current` aponta para a versão ativa. Rollback é instantâneo: basta apontar o symlink para uma versão anterior sem necessidade de novo deploy."
@@ -2282,10 +2282,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "O deploy 'Blue-Green' descrito consiste em:",
     opcoes: [
-      "A. Usar dois tipos de servidores (blue para Linux, green para Windows) simultaneamente.",
+      "A. Manter dois pools heterogêneos de servidores: blue com sistemas Linux para workloads de produção estável e green com Windows para novas versões ainda em fase de validação.",
       "B. Manter dois ambientes de produção idênticos (blue e green), fazer deploy no ambiente inativo e então redirecionar o tráfego do load balancer do ambiente ativo para o recém-atualizado.",
-      "C. Fazer deploy apenas em servidores com sistema operacional Debian (blue) ou RedHat (green).",
-      "D. Uma estratégia de coloração de logs para facilitar a identificação de erros em produção."
+      "C. Segmentar os servidores por família de SO: grupo blue para hosts Debian/Ubuntu que recebem deploys em horário comercial e green para RedHat/CentOS em janelas noturnas.",
+      "D. Uma estratégia de observabilidade que usa diferenciação por cores nos logs de produção para identificar visualmente erros críticos, warnings e eventos de deploy em andamento."
     ],
     correta: "B",
     explicacao: "B é a correta. No Blue-Green deployment, você mantém dois ambientes idênticos. O tráfego vai para o 'blue' enquanto o 'green' recebe o novo deploy e validação. Quando pronto, o LB redireciona o tráfego para o 'green'. O rollback é imediato — apenas troca o LB de volta para 'blue'."
@@ -2297,10 +2297,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "aborda segurança de servidores. Qual é a primeira e mais importante medida de segurança para SSH recomendada?",
     opcoes: [
-      "A. Alterar a porta SSH de 22 para uma porta aleatória acima de 10000.",
+      "A. Alterar a porta padrão do SSH de 22 para uma porta alta aleatória acima de 10000, reduzindo a superfície de ataques automatizados de força bruta nos servidores.",
       "B. Desativar o login root via SSH e usar usuários não-privilegiados com sudo, combinado com autenticação por chave pública.",
-      "C. Instalar fail2ban em todos os servidores como primeira medida.",
-      "D. Configurar SELinux em modo permissivo para evitar bloqueios de SSH."
+      "C. Instalar e configurar o fail2ban em todos os servidores como medida prioritária, bloqueando automaticamente IPs com múltiplas tentativas de autenticação falhas.",
+      "D. Configurar o SELinux em modo permissivo em todos os servidores para eliminar bloqueios involuntários nas conexões SSH e garantir o acesso irrestrito dos playbooks."
     ],
     correta: "B",
     explicacao: "B é a correta. O livro recomenda que a primeira medida de segurança é desabilitar o login root direto via SSH (`PermitRootLogin no` no sshd_config) e usar contas não-privilegiadas com sudo + autenticação por chave pública. Isso elimina a superfície de ataque mais comum: força bruta na conta root."
@@ -2310,10 +2310,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Como o Ansible implementa o princípio de segurança 'least privilege' (menor privilégio) na prática?",
     opcoes: [
-      "A. Criptografando todo o tráfego SSH com AES-512.",
+      "A. Criptografando todo o tráfego SSH com AES-512 e exigindo certificados mutuamente assinados para que apenas nós de controle autorizados possam se conectar aos hosts.",
       "B. Usando `become: yes` apenas nas tasks que realmente precisam de privilégios de root, em vez de executar todo o playbook como root.",
-      "C. Forçando que todos os usuários usem senhas de 32 caracteres.",
-      "D. Bloqueando todas as portas do firewall exceto a 22."
+      "C. Forçando política de senhas de no mínimo 32 caracteres alfanuméricos para todas as contas do sistema, impedindo ataques de força bruta mesmo sem autenticação por chave.",
+      "D. Bloqueando todas as portas do firewall exceto a 22 para SSH, garantindo que apenas o Ansible tenha acesso de rede aos hosts e eliminando vetores de ataque laterais."
     ],
     correta: "B",
     explicacao: "B é a correta. Aplicar `become: yes` (sudo) apenas nas tasks que necessitam de privilégios de root, em vez de configurar o play inteiro com `become: yes`, é a implementação prática do princípio de menor privilégio. Isso limita o impacto de eventuais vulnerabilidades nos módulos executados."
@@ -2323,10 +2323,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Para configurar o firewall em sistemas Red Hat/CentOS/Fedora usando Ansible, qual módulo é o recomendado?",
     opcoes: [
-      "A. iptables",
-      "B. ufw",
+      "A. iptables, o módulo de gerenciamento de regras de firewall de baixo nível que manipula diretamente as chains do netfilter em sistemas Red Hat/CentOS/Fedora modernos",
+      "B. ufw (Uncomplicated Firewall), o módulo de gerenciamento de firewall recomendado pela Red Hat para sistemas RHEL 8 e 9 com interface simplificada para regras complexas",
       "C. firewalld",
-      "D. nftables"
+      "D. nftables, o módulo nativo do Ansible para gerenciar o backend nftables do kernel Linux em sistemas Red Hat 8+, substituto oficial do iptables no gerenciamento de firewall"
     ],
     correta: "C",
     explicacao: "C é a correta. O módulo `firewalld` do Ansible gerencia o firewall firewalld em sistemas Red Hat/CentOS/Fedora. Para sistemas Debian/Ubuntu, o equivalente é o módulo `ufw`. O livro demonstra ambos no Capítulo 10."
@@ -2336,7 +2336,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Qual é a abordagem recomendada para lidar com o SELinux em playbooks Ansible?",
     opcoes: [
-      "A. Sempre desabilitar o SELinux via `setenforce 0` no início dos playbooks para evitar conflitos.",
+      "A. Sempre desabilitar o SELinux via `setenforce 0` antes de qualquer task para evitar que políticas de segurança bloqueiem módulos do Ansible que precisam de acesso ao sistema.",
       "B. Usar módulos Ansible específicos para SELinux (como `seboolean`, `selinux`) para gerenciar políticas de forma idempotente, em vez de desabilitá-lo.",
       "C. Configurar o SELinux apenas manualmente; o Ansible não tem módulos para SELinux.",
       "D. O SELinux é exclusivo do Debian e não relevante para ambientes Red Hat/CentOS."
@@ -2364,10 +2364,10 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Qual é o arquivo de configuração usado pelo Travis CI em projetos Ansible?",
     opcoes: [
-      "A. travis.yml",
+      "A. travis.yml (sem ponto inicial), o arquivo de configuração do Travis CI que deve ser criado na raiz do repositório GitHub para ativar os builds automáticos do projeto",
       "B. .travis.yml (na raiz do repositório)",
-      "C. Jenkinsfile",
-      "D. .gitlab-ci.yml"
+      "C. Jenkinsfile, o arquivo declarativo usado pelo Travis CI para definir o pipeline de CI/CD em formato Groovy, com suporte nativo a stages, steps e agentes distribuídos",
+      "D. .gitlab-ci.yml, o arquivo de pipeline do Travis CI Enterprise que segue a sintaxe YAML do GitLab CI, usado quando o projeto é hospedado em uma instância GitLab privada"
     ],
     correta: "B",
     explicacao: "B é a correta. O Travis CI usa o arquivo `.travis.yml` (com ponto inicial, na raiz do repositório GitHub). Ele define a linguagem, versões, scripts de instalação e os comandos de teste. No contexto do livro, é usado para testar automaticamente roles Ansible a cada push no GitHub."
@@ -2377,7 +2377,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "O 'serverspec' é usado para testes funcionais de infraestrutura. Qual linguagem e abordagem ele utiliza?",
     opcoes: [
-      "A. Python com pytest, testando servidores via API REST.",
+      "A. Python com pytest e o framework requests, testando o estado dos servidores remotamente via chamadas à API REST de gerenciamento exposta pelos serviços em execução.",
       "B. Ruby com RSpec, testando o estado real dos servidores remotamente via SSH (portas abertas, serviços rodando, arquivos existentes, etc.).",
       "C. YAML declarativo, similar aos próprios playbooks do Ansible.",
       "D. JavaScript com Mocha/Jest, conectando via WebSocket."
@@ -2403,7 +2403,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "O Apêndice B do livro ('Ansible Best Practices and Conventions') recomenda que ao usar mais de 5 servidores em um playbook, você deve ajustar qual configuração para melhorar o desempenho?",
     opcoes: [
-      "A. Aumentar o `timeout` do SSH para evitar timeouts em redes lentas.",
+      "A. Aumentar o `timeout` do SSH no ansible.cfg para evitar timeouts em redes com alta latência, especialmente em playbooks que realizam operações longas nos hosts remotos.",
       "B. Especificar `--forks` (padrão é 5) para aumentar a paralelização e processar mais hosts simultaneamente.",
       "C. Ativar o `gather_facts: false` para todos os plays.",
       "D. Usar `serial: 100%` para garantir que todos os hosts sejam processados de uma vez."
@@ -2420,10 +2420,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "qual módulo permite que uma task pause a execução do playbook até que uma condição seja atendida (ex: porta TCP aberta, arquivo existente, URL respondendo)?",
     opcoes: [
-      "A. pause",
+      "A. pause, o módulo que suspende a execução do playbook por um intervalo fixo de segundos ou aguarda confirmação interativa do operador antes de continuar as próximas tasks",
       "B. wait_for",
-      "C. delay",
-      "D. wait_until"
+      "C. delay, o módulo nativo do Ansible que aceita uma expressão de tempo e bloqueia o fluxo de execução até que o intervalo definido expire ou uma condição seja satisfeita",
+      "D. wait_until, o módulo de polling do Ansible que verifica repetidamente uma condição Jinja2 em intervalos regulares até que ela seja verdadeira ou o timeout seja atingido"
     ],
     correta: "B",
     explicacao: "B é a correta. O módulo `wait_for` é extremamente útil em deployments para esperar que um serviço suba: `wait_for: host=localhost port=8080 delay=5 timeout=60`. Ele tenta a condição a cada `delay` segundos até `timeout`. Diferente do `pause` que apenas espera um tempo fixo ou input humano."
@@ -2433,10 +2433,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "A diretiva `delegate_to` no Ansible serve para qual propósito?",
     opcoes: [
-      "A. Delegar a autenticação SSH para um servidor intermediário (bastion host).",
+      "A. Delegar todo o processo de autenticação SSH para um servidor bastião intermediário, que assume a responsabilidade de se conectar e executar as tasks nos hosts finais.",
       "B. Executar uma task específica em um host diferente do host atual do inventário (ex: rodar uma task no host local enquanto o play está iterando sobre servidores remotos).",
-      "C. Passar as variáveis de um host para outro durante a execução.",
-      "D. Distribuir a carga de processamento do Ansible entre múltiplos nós de controle."
+      "C. Transferir automaticamente as variáveis e fatos coletados de um host de origem para outro host de destino durante a execução do play, via a variável hostvars.",
+      "D. Implementar balanceamento de carga entre múltiplos nós de controle Ansible, distribuindo a execução dos plays de acordo com a capacidade disponível de cada nó."
     ],
     correta: "B",
     explicacao: "B é a correta. `delegate_to` redireciona a execução de uma task específica para um host diferente. Exemplo clássico: durante a atualização de um servidor web, delegar a task de remover o servidor do load balancer (HAProxy) para o próprio servidor de LB, enquanto o loop itera nos webservers."
@@ -2459,10 +2459,10 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O `vars_prompt` do Ansible é usado para:",
     opcoes: [
-      "A. Gerar automaticamente senhas seguras aleatórias para variáveis de ambiente.",
+      "A. Gerar automaticamente senhas seguras e aleatórias para variáveis de ambiente sensíveis usando o gerador criptográfico do Ansible antes do início da execução do play.",
       "B. Solicitar ao operador que forneça valores de variáveis interativamente via terminal antes do play iniciar.",
-      "C. Exibir o valor atual de todas as variáveis no início de cada task.",
-      "D. Importar variáveis de um arquivo de prompt de texto (.env)."
+      "C. Exibir no terminal o valor atual de todas as variáveis definidas no playbook no início de cada task, funcionando como um modo de debug detalhado da execução.",
+      "D. Importar automaticamente variáveis de um arquivo .env no formato de prompt de texto, aplicando cada definição como uma variável de play disponível em todas as tasks."
     ],
     correta: "B",
     explicacao: "B é a correta. `vars_prompt` pede inputs do operador antes de executar o play. Exemplo: pedir o número de versão do deploy ou uma senha de confirmação. ATENÇÃO: deve ser evitado em pipelines CI/CD não interativos, pois vai congelar a execução aguardando input."
@@ -2519,7 +2519,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "O Apêndice B do livro ('Best Practices') recomenda o uso extensivo da diretiva `name:` em cada task. Por qual motivo?",
     opcoes: [
-      "A. A diretiva `name:` é obrigatória; o Ansible falha sem ela.",
+      "A. A diretiva `name:` é obrigatória em todas as tasks; o Ansible retorna erro de parsing se encontrar uma task sem nome definido no arquivo YAML do playbook.",
       "B. Fornece documentação inline legível tanto no output da execução quanto para outros membros da equipe que leem o playbook, tornando-o auto-documentado.",
       "C. Melhora o desempenho pois o Ansible usa o `name` como chave de cache para tasks já executadas.",
       "D. O `name:` é usado pelo Ansible Vault para criptografar tasks sensíveis seletivamente."
@@ -2532,7 +2532,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Segundo o Apêndice B do livro, qual é a abordagem recomendada para organizar playbooks complexos que gerenciam múltiplos tipos de servidores?",
     opcoes: [
-      "A. Colocar tudo em um único playbook.yml gigante para facilitar a execução.",
+      "A. Concentrar todas as tasks em um único arquivo playbook.yml monolítico para simplificar a execução, evitando a complexidade de múltiplos includes e roles separados.",
       "B. Separar em roles reutilizáveis para cada componente e usar um playbook 'site.yml' principal que inclui as roles específicas para cada grupo de servidores.",
       "C. Criar um script shell separado para cada servidor e chamar o ansible via subprocess.",
       "D. Usar apenas comandos ad-hoc e evitar playbooks para reduzir a complexidade."
@@ -2558,7 +2558,7 @@ const questionBank = [
     dominio: "6.1",
     pergunta: "Qual é a principal diferença entre `ansible-lint` e `--syntax-check` do ansible-playbook?",
     opcoes: [
-      "A. São equivalentes; ambos fazem a mesma validação.",
+      "A. São equivalentes em funcionalidade; ambos analisam o YAML, verificam a lógica das tasks, testam idempotência e aplicam as mesmas regras de qualidade ao código Ansible.",
       "B. `--syntax-check` verifica apenas a sintaxe YAML básica do playbook, enquanto `ansible-lint` aplica regras de boas práticas, detectando anti-patterns como tasks sem `name`, use de comandos shell quando existe módulo nativo, etc.",
       "C. `ansible-lint` verifica sintaxe YAML e `--syntax-check` verifica lógica de negócio.",
       "D. `ansible-lint` só funciona com roles do Galaxy, enquanto `--syntax-check` funciona com qualquer playbook."
@@ -2575,7 +2575,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "No contexto de Ansible e Docker, o que é um 'Data Volume Container'?",
     opcoes: [
-      "A. Um container especial que roda o banco de dados do Ansible Tower.",
+      "A. Um container dedicado que hospeda e executa o banco de dados PostgreSQL do Ansible Tower, com volume persistente montado para garantir que os dados sobrevivam a restarts.",
       "B. Um container cuja única função é fornecer volumes de armazenamento persistente para outros containers, mantendo os dados separados do ciclo de vida do container da aplicação.",
       "C. Um container que comprime e faz backup automático de dados para S3.",
       "D. Um container com o EE (Execution Environment) do AAP pré-configurado."
@@ -2601,7 +2601,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "demonstra a configuração do GlusterFS com Ansible. GlusterFS é classificado como qual tipo de tecnologia?",
     opcoes: [
-      "A. Sistema de filas de mensagens distribuído (MQ).",
+      "A. Sistema de mensageria distribuído baseado no protocolo AMQP, usado para comunicação assíncrona entre os componentes do Ansible Tower e os nós de execução remotos.",
       "B. Sistema de arquivos distribuído (Distributed File System) que agrega armazenamento de múltiplos servidores em um único namespace.",
       "C. Banco de dados NoSQL distribuído baseado em key-value.",
       "D. Ferramenta de orquestração de containers."
@@ -2618,7 +2618,7 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "O módulo `uri` do Ansible serve para qual finalidade nos pipelines de deploy?",
     opcoes: [
-      "A. Gerenciar registros DNS (URI = Uniform Resource Identifier para serviços DNS).",
+      "A. Gerenciar e sincronizar registros DNS usando o protocolo REST do provedor, onde URI é tratado como Uniform Resource Identifier do endpoint de gerenciamento da zona.",
       "B. Fazer requisições HTTP/HTTPS para testar se uma aplicação está respondendo corretamente após o deploy, podendo validar status codes e conteúdo da resposta.",
       "C. Autenticar o Ansible no Automation Controller via API REST.",
       "D. Baixar arquivos binários de URLs externas para instalação."
@@ -2631,7 +2631,7 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "No contexto de inventários dinâmicos com AWS, qual arquivo Python é mencionado como o plugin de inventário dinâmico para EC2?",
     opcoes: [
-      "A. aws_inventory.py",
+      "A. aws_inventory.py, o script Python oficial da AWS que usa boto3 para consultar todos os recursos EC2 e gerar dinamicamente o inventário no formato esperado pelo Ansible",
       "B. ec2.py (script de inventário dinâmico para Amazon EC2)",
       "C. boto3_inventory.py",
       "D. cloud_inventory.py"
@@ -2717,7 +2717,7 @@ const questionBank = [
     dominio: "1.1",
     pergunta: "O que acontece se um playbook é executado duas vezes seguidas em um sistema já configurado, dado o princípio de idempotência do Ansible?",
     opcoes: [
-      "A. O Ansible detecta que já foi executado e se recusa a rodar novamente.",
+      "A. O Ansible detecta que o playbook já foi executado anteriormente e se recusa a continuar, exigindo que o operador limpe o estado local antes de uma nova execução.",
       "B. O segundo run falha com erro 'Already configured'.",
       "C. O segundo run executa sem erros e reporta 'changed=0' — nenhuma alteração foi necessária pois o sistema já está no estado desejado.",
       "D. O Ansible reinstala todos os pacotes e reinicia todos os serviços para garantir a configuração."
@@ -2746,7 +2746,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "No AAP moderno, o 'Automation Mesh' resolve qual problema fundamental que existia na arquitetura do Ansible Tower legado?",
     opcoes: [
-      "A. A falta de suporte a playbooks YAML na interface web do Tower.",
+      "A. A falta de suporte nativo a playbooks YAML na interface web do Tower, que só aceitava playbooks no formato JSON, limitando a portabilidade e legibilidade do código.",
       "B. A dependência de uma única conexão SSH direta do nó de controle para cada host gerenciado, criando problemas em ambientes com firewalls, múltiplos datacenters e redes segmentadas.",
       "C. A impossibilidade de executar roles do Ansible Galaxy no Tower.",
       "D. A ausência de suporte a inventários estáticos no formato INI."
@@ -2758,7 +2758,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "No Event-Driven Ansible (EDA), o que é um 'Rulebook' e qual é sua estrutura básica?",
     opcoes: [
-      "A. Um rulebook é um playbook especial que define regras de RBAC para o Controller.",
+      "A. Um rulebook é um playbook especial que define regras de controle de acesso baseado em funções para o EDA Controller, determinando quem pode disparar automações por evento.",
       "B. Um rulebook é um arquivo YAML que define fontes de eventos (sources), condições (rules/conditions) e ações (actions) — como executar um playbook — a serem tomadas quando um evento corresponde às condições definidas.",
       "C. Um rulebook é um documento de conformidade que lista as regras de segurança aplicadas pelo Ansible Vault.",
       "D. Um rulebook é um arquivo JSON que configura os webhooks do Controller para receber alertas externos."
@@ -2770,7 +2770,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "O que diferencia um 'Execution Node' de um 'Control Node' na arquitetura do Automation Mesh do AAP?",
     opcoes: [
-      "A. Execution Nodes armazenam o banco de dados PostgreSQL; Control Nodes executam os jobs.",
+      "A. Execution Nodes hospedam o banco de dados PostgreSQL distribuído do cluster AAP, enquanto Control Nodes são responsáveis por executar os Job Templates nos inventários.",
       "B. Control Nodes gerenciam a lógica do Controller (UI, API, agendamento) enquanto Execution Nodes executam efetivamente os jobs (rodam os Execution Environments/containers com ansible-runner).",
       "C. Não há diferença funcional; os termos são intercambiáveis na documentação Red Hat.",
       "D. Execution Nodes são usados apenas para inventários dinâmicos; Control Nodes para playbooks estáticos."
@@ -2782,7 +2782,7 @@ const questionBank = [
     dominio: "3.1",
     pergunta: "Qual protocolo de comunicação é utilizado pelo Automation Mesh do AAP para conectar os nós da malha (Control, Execution e Hop Nodes)?",
     opcoes: [
-      "A. SSH (porta 22)",
+      "A. SSH (porta 22), o protocolo de comunicação padrão do Automation Mesh que autentica os nós via chave pública e roteia o tráfego de automação entre Control e Execution Nodes",
       "B. HTTP/2 (porta 8443)",
       "C. Receptor — um protocolo de transporte baseado em TCP/mTLS (porta 27199 por padrão)",
       "D. gRPC sobre TLS (porta 9443)"
@@ -2798,7 +2798,7 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "No Automation Controller, o que é um 'Workflow Job Template' e como ele difere de um 'Job Template' comum?",
     opcoes: [
-      "A. Um Workflow Template executa um único playbook mais rápido usando múltiplos forks.",
+      "A. Um Workflow Template executa um único playbook de forma acelerada usando múltiplos forks em paralelo, distribuindo a carga entre todos os Execution Nodes disponíveis.",
       "B. Um Workflow Template orquestra múltiplos Job Templates em sequência ou em paralelo, com lógica condicional de sucesso/falha entre eles, criando pipelines de automação complexos.",
       "C. Um Workflow Template é exclusivo para deployments em ambientes de cloud (AWS, Azure, GCP).",
       "D. Um Workflow Template é um Job Template com Survey obrigatório ativado."
@@ -2810,7 +2810,7 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "No Controller, o que são 'Execution Environments' do ponto de vista de um usuário que cria Job Templates?",
     opcoes: [
-      "A. São as regiões de cloud onde os jobs serão executados (AWS us-east-1, Azure eastus, etc.).",
+      "A. São as regiões de cloud pública (AWS us-east-1, Azure eastus, GCP us-central1) selecionadas no Job Template para determinar onde os playbooks serão executados.",
       "B. São imagens de container pré-construídas que contêm o Ansible Core, collections, dependências Python e de sistema necessárias para executar os playbooks, selecionadas no Job Template.",
       "C. São ambientes virtuais Python (venv) armazenados no servidor do Controller.",
       "D. São janelas de tempo (manutenção) durante as quais os jobs podem ser executados."
@@ -2822,7 +2822,7 @@ const questionBank = [
     dominio: "4.1",
     pergunta: "O 'Smart Inventory' do Automation Controller funciona de qual forma?",
     opcoes: [
-      "A. Usa IA/ML para predizer quais hosts precisarão de manutenção preventiva.",
+      "A. Usa algoritmos de machine learning para analisar padrões de falhas e predizer quais hosts precisarão de manutenção preventiva, criando grupos de risco automaticamente.",
       "B. Cria um inventário virtual dinâmico que filtra hosts de outros inventários existentes usando uma expressão de busca (filter expression), sem duplicar dados.",
       "C. Sincroniza automaticamente o inventário com o CMDB via SNMP a cada 5 minutos.",
       "D. Usa o módulo setup para catalogar automaticamente todos os fatos de todos os hosts e criar grupos dinamicamente."
@@ -2850,7 +2850,7 @@ const questionBank = [
     dominio: "5.1",
     pergunta: "O arquivo `execution-environment.yml` do ansible-builder v3 possui uma chave `additional_build_steps`. Para que serve essa chave?",
     opcoes: [
-      "A. Define steps adicionais de CI/CD no pipeline do GitLab/GitHub Actions.",
+      "A. Define stages extras no pipeline de CI/CD do GitLab ou GitHub Actions que são executados automaticamente após o ansible-builder concluir a construção da imagem EE.",
       "B. Permite adicionar comandos customizados (RUN, COPY, ENV) nas fases prepend ou append do Containerfile/Dockerfile gerado, para instalar dependências não gerenciadas pelo bindep ou pip.",
       "C. Lista as collections adicionais além das do requirements.yml que devem ser incluídas.",
       "D. Define os steps de validação de segurança (DAST/SAST) que rodam após a construção da imagem."
@@ -2862,7 +2862,7 @@ const questionBank = [
     dominio: "5.1",
     pergunta: "Qual é a principal diferença entre `ansible-navigator run` e `ansible-playbook` para executar um playbook?",
     opcoes: [
-      "A. `ansible-navigator run` só funciona em sistemas Windows, enquanto `ansible-playbook` é multiplataforma.",
+      "A. `ansible-navigator run` é compatível apenas com sistemas Windows com WSL2, enquanto `ansible-playbook` suporta nativamente Linux, macOS e Windows sem virtualização adicional.",
       "B. `ansible-navigator run` executa o playbook dentro de um Execution Environment (container), enquanto `ansible-playbook` usa o ambiente Python local do nó de controle.",
       "C. `ansible-navigator run` não suporta inventários dinâmicos; `ansible-playbook` sim.",
       "D. `ansible-navigator run` executa o playbook 10x mais rápido graças a otimizações internas de cache."
@@ -2874,7 +2874,7 @@ const questionBank = [
     dominio: "5.1",
     pergunta: "O `bindep.txt` referenciado no `execution-environment.yml` do ansible-builder serve para instalar qual tipo de dependência?",
     opcoes: [
-      "A. Dependências Python (pacotes pip) para as collections Ansible.",
+      "A. Dependências Python que devem ser instaladas via pip durante o build da imagem EE, incluindo bibliotecas necessárias para as collections e módulos customizados do projeto.",
       "B. Dependências de sistema operacional (pacotes RPM/DEB) como bibliotecas C, ferramentas de linha de comando (ex: git, rsync, libxml2-devel) necessárias para as collections.",
       "C. Dependências de roles do Ansible Galaxy.",
       "D. Dependências de imagens Docker pai (FROM) para a construção da imagem EE."
@@ -2890,7 +2890,7 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "O que é o 'Lookup Plugin' no Ansible e como ele difere de um módulo comum?",
     opcoes: [
-      "A. Lookup plugins são iguais a módulos, mas executados nos hosts remotos.",
+      "A. Lookup plugins funcionam exatamente como módulos comuns do Ansible, com a diferença de serem executados nos hosts remotos via SSH em vez de no nó de controle local.",
       "B. Lookup plugins são executados no nó de controle (local) e retornam dados para uso em variáveis do playbook — como ler um arquivo local, consultar um banco de dados ou buscar um segredo no Vault.",
       "C. Lookup plugins são usados exclusivamente para buscar fatos dos hosts remotos (equivalente ao módulo setup).",
       "D. Lookup plugins são uma forma depreciada de includes que foi substituída por import_tasks."
@@ -2902,7 +2902,7 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "A diretiva `no_log: true` em uma task do Ansible é usada para:",
     opcoes: [
-      "A. Desabilitar o log de execução do ansible-playbook para o arquivo de log do sistema.",
+      "A. Desabilitar completamente o log de execução do ansible-playbook, impedindo que qualquer output das tasks seja gravado no arquivo de log definido no ansible.cfg.",
       "B. Suprimir a exibição dos parâmetros e resultado de uma task no output do playbook, protegendo dados sensíveis (senhas, tokens) de aparecerem em logs de CI/CD ou terminais.",
       "C. Fazer a task rodar em modo silencioso sem qualquer output, mesmo em caso de erro.",
       "D. Indicar que a task não deve gerar entradas no log de auditoria do Automation Controller."
@@ -2914,7 +2914,7 @@ const questionBank = [
     dominio: "2.1",
     pergunta: "O que é o `ansible-vault encrypt_string` e em que cenário ele é preferível ao `ansible-vault encrypt`?",
     opcoes: [
-      "A. `encrypt_string` criptografa um arquivo inteiro; `encrypt` criptografa apenas strings individuais.",
+      "A. `encrypt_string` processa e criptografa um arquivo YAML inteiro com todas as suas variáveis, enquanto `encrypt` é usado para proteger apenas strings individuais em linha.",
       "B. `encrypt_string` criptografa apenas um valor de string inline, permitindo incluí-lo diretamente em um arquivo YAML não-criptografado junto com variáveis em texto plano — mais granular que criptografar o arquivo inteiro.",
       "C. `encrypt_string` usa criptografia RSA enquanto `encrypt` usa AES-256.",
       "D. Não há diferença prática; ambos produzem o mesmo resultado."
@@ -3152,8 +3152,10 @@ function loadQuestion(idx) {
     div.appendChild(badge);
     div.appendChild(inp);
     div.appendChild(lbl);
-    div.addEventListener("click", e => { if (e.target.tagName !== "INPUT" && !inp.disabled) inp.click(); });
-    div.addEventListener("click", e => { if (e.target.tagName !== "INPUT" && !inp.disabled) { div.classList.toggle("selected", !inp.checked); }});
+    div.addEventListener("click", () => {
+      if (inp.disabled) return;
+      inp.click();
+    });
 
     inp.addEventListener("change", () => {
       if (inputT === "radio") {
