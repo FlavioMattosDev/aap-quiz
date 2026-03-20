@@ -1266,6 +1266,136 @@ const questionBank = [
   {
     tipo: "multiple",
     dominio: "1.1",
+    pergunta: "Segundo o livro 'Ansible for DevOps', qual é a dependência real e principal para que o Ansible possa gerenciar um servidor Linux remotamente?",
+    opcoes: [
+      "A. Um agente do Ansible instalado e rodando como daemon no servidor remoto.",
+      "B. Apenas a presença do interpretador Python instalado no servidor remoto.",
+      "C. O pacote 'ansible-client' configurado com a chave do servidor Master.",
+      "D. Um servidor web rodando na porta 80 para receber os comandos RESTful."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro ressalta que a única dependência real do Ansible nos hosts gerenciados é o Python[cite: 73]. Ele atua sem a necessidade de agentes extras (agentless)[cite: 60]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual módulo ad-hoc é utilizado no livro para verificar a quantidade de memória livre usando um comando shell convencional?",
+    opcoes: [
+      "A. O módulo 'ping' com argumentos personalizados.",
+      "B. O módulo 'memory_check'.",
+      "C. O módulo padrão 'command' (frequentemente omitido com o uso do -a).",
+      "D. O módulo 'service'."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O comando executado no livro é `ansible example -a \"free -m\" -u [username]`[cite: 86]. Como o módulo '-m' foi omitido, o Ansible usa o módulo 'command' por padrão."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No livro, como é definida a porta SSH customizada (ex: porta 2222) diretamente no arquivo de inventário INI?",
+    opcoes: [
+      "A. www.example.com --port 2222",
+      "B. www.example.com:2222",
+      "C. [www.example.com]:2222",
+      "D. www.example.com port=2222"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O autor explica que se você não estiver usando a porta 22, precisará adicioná-la diretamente ao endereço no inventário, no formato `www.example.com:2222`[cite: 82]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Ao visualizar o output de um comando ad-hoc, a cor do texto reflete o estado da operação. Como o Ansible reporta que uma alteração não foi necessária (idempotência)?",
+    opcoes: [
+      "A. Retornando a chave 'success' acompanhada de 'changed': false.",
+      "B. Retornando 'unchanged' com código HTTP 200.",
+      "C. Retornando 'ignored' no terminal.",
+      "D. Omitindo o host do output."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O livro ilustra que comandos idempotentes que não modificam o servidor exibem uma mensagem de 'success' com `\"changed\": false`[cite: 130]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O que o parâmetro `--forks` (ou `-f`) faz ao executar comandos ad-hoc no Ansible?",
+    opcoes: [
+      "A. Força o playbook a ignorar falhas.",
+      "B. Define o número de processos paralelos que o Ansible usará para executar comandos em vários servidores simultaneamente.",
+      "C. Define quantas vezes o Ansible deve tentar reconectar em caso de falha.",
+      "D. Faz um 'fork' do processo atual em background."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro demonstra que `ansible multi -a \"hostname\" -f 1` executa o comando de forma sequencial (um servidor por vez), enquanto valores maiores aceleram o processo em dezenas ou centenas de servidores usando processos paralelos[cite: 122]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para instalar um pacote, o livro recomenda usar os módulos `yum` ou `apt` ao invés de comandos shell. Qual parâmetro garante que o pacote está instalado?",
+    opcoes: [
+      "A. status=installed",
+      "B. ensure=true",
+      "C. state=present",
+      "D. pkg_state=installed"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. No livro, para instalar pacotes via `yum` ou `apt`, utiliza-se o argumento `name=[pacote] state=present`[cite: 100]. Usar `state=latest` atualizaria o pacote, e `state=absent` o removeria[cite: 189]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual das opções abaixo explica corretamente como o módulo `setup` do Ansible funciona?",
+    opcoes: [
+      "A. Ele reinicia as configurações de rede do servidor para o padrão de fábrica.",
+      "B. Ele compila uma lista de dependências antes de rodar o playbook.",
+      "C. Ele levanta um container Docker para preparar a execução.",
+      "D. Ele obtém uma lista exaustiva de detalhes sobre o servidor ('facts'), retornando informações como memória, interfaces de rede e SO."
+    ],
+    correta: "D",
+    explicacao: "D é a correta. O comando `ansible [host] -m setup` coleta os 'facts', que são informações detalhadas do ambiente remoto (sistemas de arquivos, memória, SO, etc.)[cite: 128]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Segundo o livro, qual módulo ad-hoc deve ser usado para obter detalhes sobre as permissões e o checksum (MD5) de um arquivo no servidor remoto?",
+    opcoes: [
+      "A. info",
+      "B. stat",
+      "C. file_check",
+      "D. describe"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `stat` fornece as mesmas informações do comando shell `stat`, porém estruturadas em formato JSON, facilitando o uso posterior em condicionais[cite: 148]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Ao trabalhar com o módulo `file` para criar um link simbólico (symlink), como você deve configurar o parâmetro `state`?",
+    opcoes: [
+      "A. state=symlink",
+      "B. state=link",
+      "C. state=shortcut",
+      "D. state=alias"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Conforme ensinado no livro, você cria um symlink passando os parâmetros `src`, `dest` e definindo `state=link`[cite: 152]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para listar as versões de um pacote que está sendo gerenciado pelo Node.js, o livro utiliza o npm. Como o Ansible suporta a instalação global de pacotes npm?",
+    opcoes: [
+      "A. Usando o módulo shell 'npm install -g pacote'.",
+      "B. Usando o módulo `npm` com o parâmetro `global=yes`.",
+      "C. Usando o módulo apt, já que o npm roda em cima do apt no Ubuntu.",
+      "D. Passando `--global` no ansible-playbook."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro ilustra a instalação do pacote 'forever' usando o módulo `npm` do Ansible e configurando o parâmetro `global=yes`[cite: 210]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
     pergunta: "Você está trabalhando em um servidor Linux e executa um playbook, mas percebe que ele está usando o arquivo de configuração errado. Qual é a ordem de precedência CORRETA que o Ansible usa para procurar o arquivo ansible.cfg?",
     opcoes: [
       "A. ~/.ansible.cfg do diretório home -> ./ansible.cfg do diretório atual -> /etc/ansible/ansible.cfg global -> variável de ambiente ANSIBLE_CONFIG como último recurso",
@@ -1319,6 +1449,136 @@ const questionBank = [
   // ==========================================
   // MÓDULO 2: ANSIBLE AVANÇADO (Novas)
   // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Ao utilizar a diretiva `with_items` em um playbook, como o Ansible interpreta o bloco fornecido e como a variável correspondente é injetada na task?",
+    opcoes: [
+      "A. Ele injeta a variável através de um loop usando a sintaxe `{{ list.item }}`.",
+      "B. A diretiva passa a lista iterando cada linha, que substitui a variável especial `{{ item }}` dentro da task.",
+      "C. Ele cria uma variável global chamada `items` acessível em todo o playbook.",
+      "D. Ele processa todos os itens em um único array stringificado."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Como descrito no Capítulo 4 do livro, o `with_items` define uma lista de itens, e cada linha é repassada para o play substituindo a variável mágica `{{ item }}`[cite: 190]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Se você deseja definir variáveis que estarão disponíveis para um grupo inteiro de servidores de forma limpa, sem sobrecarregar o arquivo de inventário estático, o que o livro recomenda?",
+    opcoes: [
+      "A. Definir variáveis hardcoded na linha de comando toda vez que o playbook for chamado.",
+      "B. Armazená-las em um arquivo nomeado com o nome do grupo dentro do diretório `group_vars`.",
+      "C. Incluir as variáveis em um arquivo Python nativo dentro da role.",
+      "D. Escrever as variáveis em `/etc/environment`."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Para variáveis de grupo ou host (que se aplicam a mais de um ou dois hosts), a documentação do Ansible e o livro recomendam usar diretórios `group_vars` e `host_vars` e criar arquivos YAML com o nome do grupo/host neles[cite: 283]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Em playbooks complexos, como os 'Local Facts' (facts customizados) são obtidos de um host gerenciado?",
+    opcoes: [
+      "A. Consultando a API REST do host via módulo uri.",
+      "B. O Ansible automaticamente lê arquivos JSON/INI depositados no diretório `/etc/ansible/facts.d/` do servidor remoto.",
+      "C. Usando a tag `local_facts: true` na linha de comando.",
+      "D. Declarando um dicionário `facts` dentro da configuração do Vagrantfile."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro aborda o uso de Local Facts, explicando que o Ansible busca fatos de arquivos `.fact` estruturados em formato INI ou JSON presentes em `/etc/ansible/facts.d/` nos hosts gerenciados[cite: 303]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual é a finalidade de usar a diretiva `changed_when: false` ao longo do livro (como na checagem de aplicações ativas com Node.js)?",
+    opcoes: [
+      "A. Parar a execução se o comando falhar silenciosamente.",
+      "B. Instruir o Ansible de que, mesmo que o comando shell ou command rode, ele não configurou nada de novo e não deve reportar 'change'.",
+      "C. Falsificar auditorias de log do Ansible.",
+      "D. Obrigar handlers a executar independentemente do estado do sistema."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O uso explícito de `changed_when: false` instrui o Ansible de que o comando executado apenas verificou ou leu um estado, e nenhuma alteração foi realizada no servidor, mantendo a consistência da idempotência e de logs limpos[cite: 217]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Durante um deployment em que se deseja parar uma task e notificar uma mensagem caso a assertiva falhe, qual módulo Ansible simples deve ser usado?",
+    opcoes: [
+      "A. assert",
+      "B. error_handle",
+      "C. fail_when",
+      "D. block_rescue"
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O módulo `assert` interrompe a execução do playbook se a condição (avaliada em Jinja2) informada no parâmetro `that` for avaliada como falsa. Outra forma é utilizar o módulo `fail` acompanhado de uma condicional `when`[cite: 809, 810]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O Ansible Vault protege arquivos e variáveis criptografando-os. Qual comando no terminal criptografa um arquivo YAML previamente escrito em texto plano?",
+    opcoes: [
+      "A. ansible-crypt encrypt arquivo.yml",
+      "B. ansible-vault encrypt arquivo.yml",
+      "C. ansible-playbook --encrypt arquivo.yml",
+      "D. ansible-vault create arquivo.yml"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. De acordo com o livro, para usar a criptografia AES-256 e proteger segredos (como chaves de API), você deve utilizar o comando `ansible-vault encrypt [nome-do-arquivo.yml]`. Isso solicitará a configuração de uma senha de cofre[cite: 311]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Para que serve a técnica de 'Delegation' e 'Local Actions' demonstrada no livro, como ao remover um servidor de um Load Balancer?",
+    opcoes: [
+      "A. Serve para delegar privilégios sudo a outros usuários do Linux via edição do sudoers.",
+      "B. Permite rodar uma task específica no nó que executa o playbook (Control Node) ou em um terceiro host, e não no host alvo que está sofrendo o loop do playbook.",
+      "C. Move a responsabilidade da task para o Vagrant, ignorando o Ansible.",
+      "D. Distribui de forma equilibrada as tasks entre as CPUs do host destino."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A diretiva `delegate_to` ou `local_action` faz com que uma tarefa (como comunicar-se com um balanceador de carga para isolar um servidor do pool) seja executada no host local ou no balanceador, ao invés do próprio web server que está sendo provisionado[cite: 336, 337]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "A sintaxe YAML no Ansible recomenda qual dos seguintes estilos de formatação para tasks extensas?",
+    opcoes: [
+      "A. Colocar tudo em uma única linha longa para economizar uso de memória no parse.",
+      "B. Usar indentação por TABs, como em Makefile.",
+      "C. Utilizar o caractere '>' (folded scalar) ou dicionários estruturados (key: value multi-linha) para quebrar opções em várias linhas legíveis.",
+      "D. Utilizar o pipeline vertical '|' exclusivo para todas as declarações de strings inline."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O livro, no Apêndice B, reforça as boas práticas de legibilidade usando dicionários estruturados de YAML (`key: value` por linha) ou o sinal de maior `>` que une múltiplas linhas usando espaços[cite: 858, 860]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Como o Ansible acessa um valor específico de um dicionário, como, por exemplo, o IP de uma interface retornada nos fatos do host (`ansible_eth0`)?",
+    opcoes: [
+      "A. {{ get(ansible_eth0, ipv4, address) }}",
+      "B. {{ ansible_eth0.ipv4.address }}",
+      "C. {{ ansible_eth0->ipv4->address }}",
+      "D. {{ ansible_eth0::ipv4::address }}"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible suporta sintaxe nativa do Python/Jinja2 para acesso por chaves e dot notation: `{{ ansible_eth0.ipv4.address }}` ou `{{ ansible_eth0['ipv4']['address'] }}`[cite: 290]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "No contexto de tratamento de erros, o Ansible 2.0 introduziu `Blocks`. Qual combinação de diretivas emula o bloco 'try/catch/finally' na linguagem Ansible?",
+    opcoes: [
+      "A. try: / catch: / finally:",
+      "B. block: / error: / pass:",
+      "C. block: / rescue: / always:",
+      "D. task: / revert: / end:"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O uso de `block`, `rescue` e `always` funciona de forma semelhante ao tratamento de exceções. Se houver falha no `block`, as tasks contidas no `rescue` entram em ação. As tasks do `always` rodarão sempre[cite: 351]."
+  },
   {
     tipo: "multiple",
     dominio: "2.1",
@@ -1378,6 +1638,136 @@ const questionBank = [
   {
     tipo: "multiple",
     dominio: "3.1",
+    pergunta: "Segundo a evolução do ecossistema Ansible (descrita na visão geral do Tower no livro), por qual motivo ferramentas CLI não são sustentáveis sozinhas em ambientes corporativos extensos?",
+    opcoes: [
+      "A. O uso via CLI não permite o uso do formato YAML.",
+      "B. Empresas exigem auditorias minuciosas, relatórios visuais, escalabilidade com painéis históricos e níveis de delegação baseados em perfil, recursos que o Ansible CLI sozinho não supre.",
+      "C. O CLI só é capaz de suportar até 10 servidores em um inventário estático.",
+      "D. A CLI não é segura e não pode ser integrada com o OpenSSH."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro introduz o Ansible Tower (base para o Automation Controller) justificando que negócios necessitam de relatórios detalhados de deploy e falhas, gerenciamento de acesso hierárquico, e uma visão abrangente via dashboard que a CLI básica não possui nativamente[cite: 771]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "O modelo de implantação de infraestrutura descrito pelo livro é considerado 'Agentless' (sem agentes). Que benefício arquitetural isso provê ao Red Hat AAP/Ansible?",
+    opcoes: [
+      "A. Impede a utilização de servidores Red Hat baseados em RPM.",
+      "B. Obriga as empresas a utilizarem plataformas de conteinerização em toda a rede.",
+      "C. Elimina a necessidade de instalar demônios extras nos servidores gerenciados, preservando memória e simplificando muito o fluxo, bastando o uso de SSH e Python.",
+      "D. Diminui a segurança, já que as comunicações usam portas não padronizadas."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Na introdução do livro é explicado que a abordagem Agentless (sem agente extra ou daemons nos servidores) coexiste com ferramentas legadas sem consumir pegada adicional de memória e sem requerer portas abertas inseguras[cite: 41, 61, 71]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Qual das alternativas abaixo reflete o método utilizado pelo Control Node para otimizar conexões SSH de forma assíncrona, citado como crucial a partir do Ansible 1.5 e presente nas arquiteturas do AAP?",
+    opcoes: [
+      "A. Uso exclusivo da biblioteca Paramiko ignorando conexões SSH reais.",
+      "B. Habilitação de 'ControlPersist' nativo no OpenSSH e 'Pipelining' ativado no ansible.cfg, enviando comandos sem escrever arquivos temporários a cada passo.",
+      "C. Utilização da porta 23 Telnet para driblar gargalos de criptografia AES.",
+      "D. O uso de agentes WinRM em Linux."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O autor explica que o Ansible usa nativamente o OpenSSH e suporta `ControlPersist` para manter sessões abertas, e que habilitar `pipelining=True` no arquivo `ansible.cfg` previne a necessidade de copiar, executar e excluir módulos Python via SFTP a cada passo, ganhando muita velocidade[cite: 171, 174]."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "3.1",
+    pergunta: "O Red Hat AAP abrange inventários complexos em nuvens dinâmicas, com suporte provido historicamente por scripts dinâmicos (Dynamic Inventory) descritos no livro. Quais afirmações abaixo são VERDADEIRAS? (Selecione 2)",
+    opcoes: [
+      "1. Arquivos de inventário podem ser gerados consultando APIs da AWS e DigitalOcean em tempo real usando scripts dinâmicos (como o ec2.py) ou plugins.",
+      "2. O Ansible rejeita a mistura de inventários estáticos (INI/YAML) com dinâmicos no mesmo diretório de inventário.",
+      "3. O formato de resposta esperado pelo Ansible a partir de um inventário dinâmico customizado deve ser um arquivo binário criptografado.",
+      "4. Um script Python de inventário customizado deve responder com a estrutura de grupos, hosts e variáveis formatados em JSON ao receber a flag --list."
+    ],
+    correta: [1, 4],
+    explicacao: "1 e 4 são corretas. A integração com AWS/EC2 via scripts de inventário consultando a API é validada como o método ideal para clouds elásticas[cite: 431, 451]. Além disso, a estrutura obrigatória devolvida por um script de inventário dinâmico é estritamente formatada em JSON[cite: 458, 460]. A 2 é falsa (é possível combinar dados apontando para um diretório)[cite: 456]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Ao orquestrar uma arquitetura corporativa segura (exemplo: ELK Stack mencionado no livro), onde devem ficar as variáveis confidenciais que serão usadas pelo Controller?",
+    opcoes: [
+      "A. Hardcoded dentro do arquivo tasks/main.yml para evitar que se percam.",
+      "B. Armazenadas via Ansible Vault em arquivos de variáveis no versionamento, ou armazenadas externamente em Gerenciadores de Credenciais no AAP.",
+      "C. Nas tags dos containers.",
+      "D. O Ansible Controller não suporta variáveis sigilosas."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. As variáveis com dados sensíveis nunca devem ir em texto plano no versionamento (Git)[cite: 310]. Elas devem ser protegidas pelo Ansible Vault ou integradas ao cofre seguro do próprio Tower/Automation Controller (Credentials)[cite: 782, 787]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Como o Ansible descreve a arquitetura da infraestrutura e as intenções de provisionamento nas implementações do Red Hat AAP?",
+    opcoes: [
+      "A. Como linguagens de programação imperativas complexas baseadas apenas em Bash.",
+      "B. Através do conceito de Data-Driven Automation utilizando arquivos YAML legíveis, mapeando intenções em um 'Infrastructure as Code'.",
+      "C. Utilizando scripts SQL acoplados via HTTP.",
+      "D. Compilando binários customizados para cada host listado no banco de dados do Controller."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Uma premissa fundamental da arquitetura do Ansible é que ele utiliza uma sintaxe declarativa em YAML, acessível a sysadmins, desenvolvedores e gerentes, unificando processos numa visão de 'código claro' (Clear and complete)[cite: 59, 179]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "O livro Ansible for DevOps ensina a lidar com firewalls para tornar a infraestrutura do host gerenciável, mas segura. Se os servidores não estão sob um Load Balancer da nuvem (como AWS ELB), como o Ansible recomenda administrar regras em sistemas RHEL modernos?",
+    opcoes: [
+      "A. Módulo firewalld gerenciando zonas, portas abertas limitadas e recarregamentos permanentes de política.",
+      "B. Configurando UFW em vez do firewalld, já que a RedHat o considera padrão absoluto.",
+      "C. Desativando todos os firewalls localmente.",
+      "D. Utilizando iptables bruto e persistindo-o num daemon python customizado."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Em instâncias RedHat, Fedora e CentOS atuais, a arquitetura moderna confia no módulo `firewalld` no Ansible para abrir e salvar rotas persistentes (`permanent: yes` e `immediate: yes`)[cite: 751, 755]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Na integração com a arquitetura de Nuvem (ex: AWS EC2 no livro), como o Ansible garante que apenas uma instância EC2 seja levantada para um grupo sem duplicá-las inadvertidamente, utilizando o módulo ec2?",
+    opcoes: [
+      "A. Validando os logs de deploy no Jenkins.",
+      "B. Usando o parâmetro 'exact_count: 1' em conjunção com 'count_tag', identificando o grupo por tags do AWS.",
+      "C. Limpando a API inteira antes do deploy.",
+      "D. Configurando loop iterativos de timeout do ec2."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro ilustra o conceito de provisionamento idempotente do módulo EC2 utilizando os parâmetros `exact_count` e `count_tag`, assegurando que o Ansible identifique o servidor e crie exatamente aquele número de VMs com aquela tag, evitando duplicatas[cite: 543]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "No livro, é descrita a filosofia de implantação 'Infrastructure as Code' que reflete na arquitetura AAP. Qual a vantagem do controle de versão centralizado (Git) somado à execução orquestrada pelo Controller?",
+    opcoes: [
+      "A. Exclui a necessidade de desenvolvimento de aplicativos.",
+      "B. Requer menos desenvolvedores.",
+      "C. Possibilita o deploy automatizado (CI/CD) onde qualquer erro pode causar a reversão imediata testando sintaxe localmente, evitando 'Cowboy coding' (coding na produção).",
+      "D. Nega acesso a provedores públicos."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Testar a infraestrutura e versionar o código (evitando 'cowboy coding' na produção) garante que alterações testadas sejam implementadas replicando de forma fiel o modelo e, se necessário, viabilize um recuo seguro[cite: 90]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Sobre as práticas recomendadas pelo Ansible que se aplicam à governança no AAP: O que é essencial implementar nas máquinas para reforçar a segurança do acesso remoto SSH utilizado pelo motor Ansible?",
+    opcoes: [
+      "A. Habilitar a autenticação por senha de root usando senhas complexas.",
+      "B. Empregar conexões Telnet legadas para hosts confiáveis.",
+      "C. Desativar PermitRootLogin (não usar usuário root diretamente), configurar usuários sem privilégios plenos, atrelar chaves SSH privadas e usar sudo com 'become' apenas onde for necessário.",
+      "D. Modificar o tráfego do playbook para porta 80 apenas."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. A arquitetura recomendada em ambientes de produção exige endurecer o SSH (`PermitRootLogin no`, `PasswordAuthentication no`), conectar via chave e elevar os privilégios granularmente usando sudo/become respeitando o privilégio mínimo[cite: 730, 731, 734]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
     pergunta: "No Event-Driven Ansible (EDA), qual componente é o encarregado de ler dados de telemetria externos (ex: um alerta do Prometheus ou uma mensagem no Kafka) e convertê-los em eventos que o Rulebook entenda?",
     opcoes: [
       "A. EDA Controller, o componente central do Event-Driven Ansible responsável por orquestrar e rotear eventos entre as fontes externas e as ações dos Rulebooks",
@@ -1421,6 +1811,136 @@ const questionBank = [
   {
     tipo: "multiple",
     dominio: "4.1",
+    pergunta: "Baseado nos conceitos explicados na configuração do Ansible Tower (base para Automation Controller) no livro, qual é a principal entidade agregadora onde Projetos, Inventários e Times são centralizados e organizados?",
+    opcoes: [
+      "A. Datacenters",
+      "B. Organizations (Organizações)",
+      "C. Clusters",
+      "D. NameSpaces"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro ilustra a configuração básica do Ansible Tower, definindo que ele é centrado na ideia de agrupar Projetos, Inventários, Times e Usuários dentro de 'Organizations' (Organizações) para isolamento lógico e de negócios[cite: 777]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No Automation Controller/Tower, como os playbooks armazenados em um repositório Git corporativo são configurados para execução orquestrada?",
+    opcoes: [
+      "A. Pelo uso de Workflows locais no desktop do usuário.",
+      "B. Através da configuração de um 'Project' com o SCM type definido para o repositório Git. O Controller atualiza (checkout) o código e executa o playbook usando um 'Job Template'.",
+      "C. Utilizando scripts Python cruos que efetuam um cron clone local.",
+      "D. Enviando o arquivo .yaml via requisição HTTP POST à tela principal."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O fluxo do Controller é baseado na vinculação do repositório Git a um Projeto e na criação de um Job Template, que combina esse Projeto (playbook), Inventário e Credenciais[cite: 778, 781]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Por que as Credenciais de 'Machine' (Máquina) configuradas em uma interface do Controller são seguras para equipes colaborativas?",
+    opcoes: [
+      "A. Porque apenas o administrador da infraestrutura do Ansible vê as senhas, já os operadores que disparam (Execute) os Jobs usam as senhas pré-armazenadas e criptografadas sem conhecer seu texto plano.",
+      "B. Porque a Red Hat não criptografa, mas ofusca o texto com base64.",
+      "C. Porque a CLI exige uma chave YubiKey externa em cada play.",
+      "D. Porque o SSH nativo do Linux bloqueia múltiplos acessos de IPs corporativos."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. As Credenciais (como Machine/SSH) permitem definir senhas, keys de API, etc., e fornecê-las via RBAC a uma Equipe. Membros da equipe operam a infraestrutura (lançam o job) sem ter visibilidade da senha real da máquina, limitando o escopo de segurança[cite: 781, 786]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "De acordo com os recursos notáveis citados no livro para gerenciar execução de Playbooks (via Ansible Tower ou Controller), o que é um Provisioning Callback?",
+    opcoes: [
+      "A. Um script em C++ que devolve hashes de erro no syslog.",
+      "B. Uma funcionalidade que possibilita que servidores recém-provisionados 'chamem de volta' uma URL específica do Job Template, acionando a autoconfiguração do próprio host via Ansible.",
+      "C. Um callback que restabelece o servidor de testes para o snapshot 0 do VMWare.",
+      "D. Um alerta de erro SMTP com callback de notificação de segurança."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Provisioning Callbacks (retornos de chamada de provisionamento) permitem integração nativa com nuvem; assim que um host boota, ele invoca a URL rest e o Controller atira o Job Template direcionado a este nó para que ele se autoconfigure[cite: 787]."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "4.1",
+    pergunta: "Sobre a visualização de execuções (Jobs) no Controller/Tower, identifique as asserções VERDADEIRAS (Selecione 2):",
+    opcoes: [
+      "1. A UI provê atualizações de log de saída ao vivo (real-time output stream), assim como o console exibido via CLI, para inspecionar tarefas em tempo real.",
+      "2. Os Jobs do Controller não deixam registros históricos para manter o uso do banco de dados mínimo.",
+      "3. O painel (Dashboard) exibe métricas sumárias das hosts bem-sucedidas ou falhas nas últimas implantações.",
+      "4. O Controller deleta as credenciais usadas em um job assim que a execução finaliza por motivos de segurança extrema."
+    ],
+    correta: [1, 3],
+    explicacao: "1 e 3 são corretas. A interface visual do Tower/Controller (Dashboard) fornece feedback ao vivo (View standard out) e salva métricas ricas de quais hosts falharam ou mudaram[cite: 784, 785]. As credenciais são persistentes (não apagadas na execução) e o histórico de jobs permanece gravado."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Como o Controller lida com a entrada de variáveis de usuário em momento de execução (run-time) se precisarmos, por exemplo, de uma confirmação interativa do operador?",
+    opcoes: [
+      "A. Através de interrupções de console onde o administrador precisa logar via SSH na máquina servidora do Ansible.",
+      "B. Bloqueando o Job, já que Jobs de UI nunca interagem com o usuário.",
+      "C. Utilizando Surveys (Pesquisas/Questionários) configurados diretamente no Job Template, injetando as variáveis escolhidas no fluxo do playbook sem usar prompt do terminal.",
+      "D. Injetando dados através do protocolo FTP antes de startar o play."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Para interatividade no Controller (ao contrário de `vars_prompt` na CLI que pendura automações desatendidas), usam-se os 'Surveys'. Eles coletam parâmetros predefinidos do usuário de forma controlada via UI antes da execução, repassando-os como extra variables[cite: 787]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Em implementações corporativas detalhadas no livro, ao adotar a implantação de uma infraestrutura e configurar integrações Contínuas (CI/CD), qual comportamento do parâmetro `--check` é fundamental nos workflows de Job Templates?",
+    opcoes: [
+      "A. Deleta a infraestrutura caso ela divirja da versão homologada.",
+      "B. Roda o playbook ignorando todas as Tasks de notificação.",
+      "C. Funciona como 'Dry Run' checando quais hosts sofreriam alterações e notificando os administradores se há 'desvios de configuração' na infraestrutura, sem efetuar alterações reais.",
+      "D. Verifica a sintaxe estrita da linguagem YAML emulando um linting de projeto."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Conhecido como check mode (ativado pelo botão 'Check' do Controller ou flag `--check` via linha de comando), ele possibilita validar o modelo idempotente comparando o código da infra contra a realidade dos servidores — reportando mudanças necessárias de maneira segura[cite: 786, 813]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "O livro 'Ansible for DevOps' cita o Jenkins como uma alternativa popular. Qual a principal barreira de segurança mencionada que o Ansible Tower/Controller gerencia melhor de forma nativa?",
+    opcoes: [
+      "A. O Controller criptografa scripts PowerShell automaticamente.",
+      "B. Jenkins possui falhas para rodar código Python nativo limitando o Ansible.",
+      "C. A capacidade de encapsular de forma nativa RBAC para gerenciar chaves SSH, certificados e outras credenciais sem que o time de deploy conheça o segredo em plain-text.",
+      "D. A limitação no Jenkins do número de instâncias AWS rodando por vez."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Embora seja possível configurar o Jenkins para disparar automações Ansible de maneira contínua, o próprio autor constata que a principal dificuldade no Jenkins é a governança limpa de credenciais (SSH keys, tokens), algo que o Automation Controller entrega de forma nativa (built-in Credentials model)[cite: 801]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Ao utilizar Múltiplos Arquivos de Inventários, que o Ansible suporta naturalmente, o Controller permite integrar nativamente grupos de hosts importados estaticamente de um repositório (Git) com instâncias mapeadas por um script dinâmico de Nuvem (ex: AWS)?",
+    opcoes: [
+      "A. Não, os inventários no Controller devem ser 100% dinâmicos ou 100% estáticos.",
+      "B. Sim, as origens múltiplas (Multiple Inventory Sources) suportam importar de modo híbrido inventários estáticos versionados ao lado de chamadas de scripts dinâmicos de cloud no mesmo arquivo/diretório consolidado.",
+      "C. Sim, desde que convertidos primeiro para banco de dados relacional.",
+      "D. Não, as origens múltiplas misturam variáveis causando travamento na alocação global do Ansible."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible e o Controller leem múltiplas fontes e suportam orquestrar infraestruturas híbridas combinando inventários em nuvem gerados dinamicamente com definições estáticas locais[cite: 456]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Se um desenvolvedor quiser executar um job, via Automation Controller, porém agendado para o final de semana para testar novos updates sem acionar DevOps manualmente, que funcionalidade permite isso?",
+    opcoes: [
+      "A. Inclusão manual do crontab do servidor root Linux pelo administrador do Controller.",
+      "B. A funcionalidade nativa 'Schedule' acoplada diretamente ao Job Template criado.",
+      "C. O playbook do Ansible usando o comando sleep bloqueando a task até o final de semana.",
+      "D. Criação de um Daemon loop via SSH multiplexing em espera passiva."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Tower/Controller conta com um agendador ('Schedule') nativo integrado à UI. É perfeitamente viável usar a funcionalidade de Schedule para criar um cronograma que dispara um Job ou Workflow num horário planejado sem necessidade de cron do OS[cite: 786]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
     pergunta: "Para melhorar a velocidade de execução de um playbook que gerencia 5.000 servidores, você ativa a funcionalidade 'Job Slicing' (Fatiamento de Trabalho) no Automation Controller. O que essa função faz exatamente?",
     opcoes: [
       "A. Divide o playbook em seções menores baseadas em tags definidas pelo operador, ignorando tasks marcadas como 'slow' e priorizando as críticas para execução imediata.",
@@ -1461,6 +1981,136 @@ const questionBank = [
   // ==========================================
   // MÓDULO 5: EXECUTION ENVIRONMENTS (Novas)
   // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Na orquestração de infraestruturas via Docker citadas no livro, como a idempotência do Ansible é utilizada dentro da gestão de imagens (com o módulo 'docker_image')?",
+    opcoes: [
+      "A. Configurando o state='build', o Ansible constrói a imagem a partir de um Dockerfile fornecido, garantindo sua presença antes de criar os contêineres.",
+      "B. O Ansible empacota a própria engine do Docker no formato ISO durante a execução.",
+      "C. O Ansible compila código fonte Java e joga diretamente na memória virtual do Host sem construir a imagem do Docker.",
+      "D. Apenas é possível utilizar imagens prontas baixadas do Docker Hub, não construir."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Ao usar o módulo `docker_image`, como ensinado no exemplo do app Flask, você indica a rota do `Dockerfile` (`path: ...`) e o parâmetro `state: build`. O Ansible vai garantir que a imagem seja construída e armazenada no daemon Docker alvo[cite: 608]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Em implementações práticas, os containers Docker (base dos EEs e apps modernos) são descritos como sendo efêmeros, ou seja, não guardam estado persistentemente sem volumes externos. Como o Ansible lida com a persistência do banco de dados (ex: MySQL) rodando num container via Docker?",
+    opcoes: [
+      "A. Adicionando variáveis de play para fazer dump das transações a cada segundo.",
+      "B. Criando um padrão chamado 'Data Volume Container' (ou volume persistente), e injetando na inicialização do MySQL a flag volumes_from (ou associando mounts na montagem real) gerenciado pelo playbook.",
+      "C. Alterando a engine de database do MySQL em cache de RAM in-memory para sempre.",
+      "D. Substituindo o Docker pelo VirtualBox e o formato box Vagrant nativo."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O autor cria um contêiner separado contendo dados ('data container') expondo pastas com VOLUME do Docker, garantindo que mesmo se o contêiner de aplicativo ou banco falhar (for recriado efemeramente), a persistência dos dados é resgatada e atrelada via a instrução `volumes_from: data` no módulo do Ansible[cite: 613, 621]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "No livro é ressaltada uma biblioteca essencial do Python a ser instalada na máquina destino para que o Ansible consiga interagir localmente ou remotamente com a API do Docker e construir o ambiente. Que biblioteca é essa?",
+    opcoes: [
+      "A. requests-python",
+      "B. docker-compose",
+      "C. docker-py (instalado via pip: pip install docker-py)",
+      "D. lxc-tools"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Conforme apontado pelo autor no playbook de provisionamento inicial de containers, o módulo Python `docker-py` é vital para que os módulos internos do Ansible, como `docker` ou `docker_image`, possam se comunicar e emitir chamadas ao daemon docker alvo[cite: 617]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "De acordo com o princípio dos ambientes isolados (containers em Ansible e EEs futuros), para agilizar tempos de build, o livro ilustra instalar as dependências de sistema do app no Dockerfile (com comando RUN) e não por uma longa sequência no playbook. Qual é o motivo primário dessa sugestão?",
+    opcoes: [
+      "A. Para o Ansible evitar de lidar com distros baseadas no Ubuntu.",
+      "B. Porque comandos RUN em um Dockerfile são armazenados em cache de camada (layer caching) do Docker, tornando reconstruções futuras da imagem (rebuilds) muito rápidas (segundos ao invés de minutos).",
+      "C. O Ansible não consegue instalar pacotes APT rodando em um container vazio.",
+      "D. Porque o APT do Ubuntu não executa em sistemas virtuais conteinerizados se não engatilhado por chroot bruto via Docker RUN."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Usar comandos RUN para pacotes base via Dockerfile permite que o construtor do container use o cache de camadas de imagem. Se a instalação ficasse num longo playbook de Ansible que refizesse o processo do zero localmente a cada run, você perderia o cache das imagens e o provisionamento seria sempre demorado[cite: 633]."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "5.1",
+    pergunta: "Sobre a integração de Ansible com Containers para automações modernas (como as vistas na construção de Execution Environments ou microserviços), marque as afirmativas VERDADEIRAS (Selecione 2):",
+    opcoes: [
+      "1. A criação de imagens e a orquestração do status de contêineres pode ser plenamente centralizada e encapsulada em um Playbook orquestrado.",
+      "2. O uso da infraestrutura imutável (onde a base em container já possui tudo preinstalado) exclui a funcionalidade de mapeamento de portas entre hospedeiro e contêiner.",
+      "3. Executar o ansible-playbook diretamente dentro da criação de um Dockerfile (via comando RUN) é possível e ilustrado no livro para configurar a aplicação logo antes de congelar a imagem.",
+      "4. Sistemas base em contêiner sempre precisam usar SSH na porta 22 obrigatoriamente e ser criados com Vagrant para responder a requisições Ansible."
+    ],
+    correta: [1, 3],
+    explicacao: "1 e 3 são corretas. Você pode orquestrar e agendar containers de forma reprodutível[cite: 606]. O autor demonstra explicitamente o acoplamento do Ansible no container rodando `RUN ansible-playbook playbook.yml --connection=local` dentro de um Dockerfile para auto-configurar a imagem internamente, uma técnica útil inclusive para criação de Execution Environments modernos[cite: 632, 634]. A 2 é falsa, pois portas são abertamente roteáveis. A 4 também, já que a conexão local anula a necessidade SSH[cite: 635]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Para que o contêiner Node/Flask responda com a aplicação rodando interativamente após inicializado e sem encerrar imediatamente, qual configuração o módulo Ansible utiliza ao chamar o daemon Docker?",
+    opcoes: [
+      "A. Definindo `command` no playbook do ansible com um processo contínuo (por exemplo, `python /opt/www/index.py`) e definindo a porta e o state=running.",
+      "B. Adicionando state: stopped no módulo de docker e depois executando init daemon restart.",
+      "C. Usar command: exit 0 logo de cara na lista.",
+      "D. Configurar o contêiner em modo bash interativo bloqueando a execução local do playbook."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Em contraste ao uso do `/bin/true` que faz um run de teste (onde o container finaliza/aborta rápido), para segurar um aplicativo, define-se no playbook a chave `command:` com a chamada de execução em front-end da aplicação e mapeando as portas com `ports:`[cite: 621, 622]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Qual das abaixo exemplifica o benefício crucial (mencionado no livro) de gerenciar a própria workstation/host de desenvolvedor usando os módulos como Homebrew e playbooks Ansible com conexão local?",
+    opcoes: [
+      "A. Obriga que todos os desenvolvedores assinem licenças proprietárias do OS X Mac.",
+      "B. É uma forma robusta e livre de frustração de recriar e reabastecer a workstation caso necessite apertar o botão de 'reset', convertendo a 'Snowflake Workstation' num estado declarativo perfeitamente versionado com dotfiles.",
+      "C. Faz com que a workstation emule um servidor Hyper-V e execute jogos de windows isoladamente.",
+      "D. Libera acesso irrestrito do root via VNC para operações corporativas."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible também automatiza o estado do host local usando `connection: local` auxiliando em gerenciar dependências, repositórios clonados (dotfiles) e o ambiente total de ferramentas do desenvolvedor, tornando-o padronizado e livre de erros a cada re-formatação da máquina[cite: 589]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Num provisionamento de máquina contêiner ou local (como na orquestração de containers e VMs no Vagrant), qual instrução na etapa de provisão aciona o playbook de toda a aplicação no host destino ao fim da construção inicial da máquina?",
+    opcoes: [
+      "A. ansible.playbook = 'provisioning/main.yml' na configuração do provisionador Ansible dentro do arquivo declarativo original de infraestrutura como o Vagrantfile.",
+      "B. A instrução build-start do comando bash-ansible autoexec.",
+      "C. Uma requisição XML no arquivo index.php configurando hooks ao VirtualBox.",
+      "D. A cópia oculta do diretório ssh .vagrant para a interface web de build."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O script mestre que faz a integração de VMs e contêineres virtuais com a rede acopla nativamente o `config.vm.provision 'ansible'` ao apontar `ansible.playbook` como a origem de suas tasks de configuração automatizadas, ligando ambos sem passos adicionais de CLI manuais[cite: 615]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Por que se torna arriscado ou um 'antipadrão', conforme relatado no livro, não tratar bases de dados persistentemente separadas de contêineres de aplicação estritos?",
+    opcoes: [
+      "A. Porque containers são efêmeros: bancos salvos dentro do sistema de arquivos nativo do próprio container serão descartados por completo quando este container falhar, parar ou for recriado sem persistência ativada em volumes externos.",
+      "B. Porque bancos não podem de modo algum ser executados sob a engine Cgroups e Namespaces usada pelo Docker devido aos threads em C.",
+      "C. Porque os dados expiram devido ao sistema de criptografia temporal do SELinux limitando o TTL de MySQL.",
+      "D. A RedHat limita orquestração de bancos em playbooks para fins de concorrência com o Vagrant."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Conforme ensinado na prática do livro: 'we need a separate data container to persist the MySQL database, because data changed inside the MySQL container is lost every time the container stops' (contêineres são efêmeros em seu file system default)[cite: 613]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Se utilizarmos as práticas de empacotar Ansible com Ubuntu base na construção de uma imagem, e depois executarmos via SSH para orquestrá-la, qual flag o autor usa no Playbook local para extrair o real IP de host com ferramentas nativas do Linux burlando temporariamente o uso avançado de facts para redes conteinerizadas específicas?",
+    opcoes: [
+      "A. O uso de comandos como iptables --dump e parse manual pelo plugin.",
+      "B. O uso de um comando inline como `/sbin/ip route|awk '/default/ { print $3 }'` usando o módulo shell guardado (registrado) em uma variável 'host_ip'.",
+      "C. Com módulo debug listando JSON absoluto.",
+      "D. Módulo host_fact com parser ruby imbuído em Python."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Num ambiente onde o framework controla as redes interativas de IPs locais/containers virtualizados, uma solução para resgatar dinamicamente o gateway host via Ansible playbook é acionar o módulo shell registrando a string da linha de IPs de `/sbin/ip route` com awk em `host_ip`[cite: 635]."
+  },
   {
     tipo: "multiple",
     dominio: "5.1",
@@ -1542,6 +2192,136 @@ const questionBank = [
     ],
     correta: "B",
     explicacao: "B é a correta. O uso do módulo `pause` (com prompt para digitação) ou `vars_prompt` congela pipelines (que são processos desatendidos / sem TTY interativo ativo). Tentar ler um input do usuário em um executor de CI/CD faz o job pendurar até dar timeout."
+  }
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Durante o desenvolvimento de um Playbook focado em Continuous Delivery, é provável que existam comandos e tarefas de scripts complexas com falhas transitórias conhecidas ou avisos benignos indesejados. O que o livro recomenda para lidar com erros incômodos que NÃO indicam um problema fatal, para não quebrar a CI/CD de um processo de deploy?",
+    opcoes: [
+      "A. Fazer o reboot constante dos servers com comandos crontab.",
+      "B. Desativar completamente os logs no Jenkins apagando a saída sysout e log de erros globais da máquina controlada.",
+      "C. Utilizar o parâmetro 'ignore_errors: true' em uma task específica, instruindo o playbook a continuar sua execução tranquilamente, sendo uma ferramenta prudente desde que a falha não seja indicativo de problema infraestrutural crasso.",
+      "D. Utilizar a sintaxe fail_when: null no cabeçalho inteiro do Playbook."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Em scripts difíceis que lançam erros inofensivos em certas instâncias controladas, aplicar `ignore_errors: true` restringe o colapso e o crash imediato que o Ansible efetuaria abortando o playbook[cite: 335]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Ao criar um teste integrado para a Role ou Playbook com a ferramenta Travis CI embutida no GitHub, quais dos quatro aspectos de teste de integração representam a abordagem final fundamental e atestam que a automação fez sua configuração infraestrutural com primazia?",
+    opcoes: [
+      "A. O Teste de Velocidade Absoluta focado no download da distro Linux testada pela interface do Travis via API de medição de latência web em 12 passos controlados.",
+      "B. O Teste de Idempotência que repete a aplicação infinitamente sem limite local de loops forçando exaustão das credenciais AWS EC2 alocadas pelo playbook Travis no repositório branch.",
+      "C. O Teste de Sucesso Final do Papel (Role Success), onde você invoca, por exemplo, um comando `curl http://localhost/` diretamente no Travis com o intuito de verificar e provar funcionalmente se o serviço levantado respondeu com o status HTTP 200 esperado da aplicação ou do serviço provisionado na infraestrutura virtual.",
+      "D. O teste Lint de Variáveis e indentação manual que analisa vírgulas penduradas impedindo falhas em commit code no Git e na inicialização."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Apesar de garantir o YAML correto e a idempotência na recarga, é primordial testar de verdade se o seu papel alcançou sucesso e mudou a realidade; executando na pipeline após o deploy, por exemplo, um teste `curl` verificador final validando a saúde da aplicação funcional no sistema alvo na execução isolada pelo Travis CI[cite: 825]."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "6.1",
+    pergunta: "Avalie como Verdadeiro ou Falso o que o guia ensina para estruturar comentários e nomenclaturas de tarefas mantendo o padrão da cultura DevOps (Selecione as corretas):",
+    opcoes: [
+      "1. Todo Playbook além do escopo trivial exige obrigatoriamente comentários de linha (#) que detalhem excentricidades; Playbooks limpos, apesar do YAML amigável, deterioram ao longo de meses sem essa trilha explicativa contínua do que se pretende efetuar.",
+      "2. Nunca utilize espaços em vez de abas, pois arquivos YAML dependem de processamento binário estrito das abas do teclado para as listas de iteração.",
+      "3. A chave 'name:' serve não só como organizador para a leitura, mas documenta a execução viva que os membros da sua equipe assistirão fluindo no console do Tower ou Terminal a cada passo e atua como self-documentation efetivo e claro.",
+      "4. Ao criar roles para distribuir em larga escala as variáveis mais alteradas ou substituídas pelo utilizador final sempre deverão residir isoladas na raiz inacessível do diretório de lib python e evitada no default/main.yml."
+    ],
+    correta: [1, 3],
+    explicacao: "1 e 3 são corretas. A consistência nos comentários textuais (#) aliada com o preenchimento de `name` de formato sentencial ajuda o playbook a ser um documento vivo (Self-documenting e autoexplicativo na evolução do projeto) que é a verdadeira essência da Infraestrutura como Código (IaC) e facilita o Trouble-shooting de log diário de deploy e manutenções passadas meses após a escrita[cite: 843, 844]. A 2 é falsa, YAML proíbe abas duras[cite: 853]. A 4 também, a pasta `defaults/main.yml` serve justamente aos overrides fáceis do usuário[cite: 849]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Em cenários de CI/CD em conjunto com o Jenkins CI citados em um Playbook de implementação e gerência contínua, uma vez que sua equipe atinja sucesso de deploy pelo playbook automatizado Ansible, qual prática opcional ajuda consideravelmente o rastreio global via notificação (Notify / Communications) implementado na post_tasks do YAML?",
+    opcoes: [
+      "A. Lançamento de SMS diretos para a placa de rádio na central AWS EC2 nativa local via modem analógico legado da rede física embutida no sistema de boot log das instâncias do Ansible Tower no Azure.",
+      "B. Apagar silenciosamente os arquivos de rastreamento .tmp criados na compilação logstash de modo a omitir evidências indesejadas pós deploy ocultando falhas que passariam no ambiente de sandbox local.",
+      "C. Inserir tarefas embutidas no pipeline que contatem imediatamente interfaces de Chat, Email e sistemas integrados nativamente com módulos (HipChat, Slack, IRC, Twilio ou Campfire) repassando instantaneamente alertas visíveis e históricos de 'Deploy Concluído' ou eventuais quebras a toda equipe ou aos desenvolvedores via integração embutida do Ansible.",
+      "D. Compilar módulos customizados de C/C++ na memória dos bancos atrelados no MySQL com uso do shell interativo bloqueando acessos ao sistema alvo via um pipeline binário local nas dependências externas temporárias via FTP em chroot de proteção passiva local via NAT iptables default reconfigurado na task de inicialização."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Em uma esteira madura automatizada e eficiente, é primordial que o Ansible faça o broadcast de mensagens de sucesso ou relatórios imediatos nos canais colaborativos das equipes utilizando os módulos inclusos na suíte de DevOps (IRC, HipChat, Slack, etc) comunicando a conclusão a partir dos `post_tasks`, agilizando resolução de problemas e integrando o ciclo contínuo sem demandar babysitting da equipe técnica no prompt visualmente[cite: 722, 723]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Com a popularização da verificação automatizada TDD para Infra (Test-Driven Infrastructure/Development) focada no resultado estruturado real da sua automação Ansible. O autor demonstra a verificação funcional final por scripts validando portas e serviços no servidor isoladamente sem depender de um agente extra; Como ele nomeia a utilidade de testes atrelada com Ruby Rspec e testes explícitos em seu processo citado?",
+    opcoes: [
+      "A. Test Kitchen local restrito",
+      "B. VirtualBox Spec Testing nativo de infra",
+      "C. Ansible-PyTest unit framework nativo de assertions de sintaxe avançado atrelado no node executável",
+      "D. Serverspec"
+    ],
+    correta: "D",
+    explicacao: "D é a correta. No tocante a testes de aceitação e funcionamento funcional do sistema alvo fora do escopo Ansible isolado (em Ruby + Rspec para analisar a infra em detalhe pragmático na ponta remota sem agentura via conexões nativas SSH testando a aderência exata sem o overhead padrão validando o seu controle), o Serverspec foi exemplificado no Apêndice abordado de testes e CI/CD demonstrado com links explicativos[cite: 829, 830]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "No decorrer das atualizações assíncronas ('rolling update') exemplificadas no processo Blue-Green/Zero Downtime utilizando Load Balancers (Como o HAProxy atrelado aos apps NodeJS), se a checagem falha num nó alvo recém orquestrado por mudanças, o Ansible oferece e executa uma diretiva preventiva nativa baseada na tolerância descrita no play. O que define que a execução pare de derrubar a frota global de servidores protegendo os servidores intactos restantes?",
+    opcoes: [
+      "A. O valor configurado de `serial: 2` (processando os batches progressivos de no máximo duas máquinas) aliado com tolerância calculada por defaults (ou `max_fail_percentage`), congelando e paralisando instâncias adjacentes assim que a falha daquele bloco exceder os parâmetros críticos ou retornar fail_test, resgatando a sanidade dos outros sistemas ainda não processados pelas atualizações do seu ciclo destrutivo.",
+      "B. O bloqueio nativo imposto pela instrução do firewall interno Ubuntu limitando sub-rotinas e executáveis da pilha local do proxy do sistema no node do host mestre e do load balancer reconfigurado previamente via template remoto.",
+      "C. Usar Wait_For infinitamente gerando freeze na conexão do nó e bloqueando ping do host temporariamente parando a checagem paralela TCP interna via roteamento proxy em malha.",
+      "D. A detecção do timeout nativo da camada OpenSSH que desconecta a linha de instrução de pipelines locais isolando o erro antes do servidor proxy responder o status inicial bloqueando envios recursivos assíncronos."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Gerenciando tolerâncias de implantação em clusters vivos, as instruções `serial` delimitam quantas máquinas simultaneamente entram na janela de deploy ou de testes e as diretivas default ou opcionais como `max_fail_percentage` interrompem preventivamente todo o playbook no primeiro cenário sintomático das waves ou lotes atualizados de nodes sem envenenar as máquinas intocadas[cite: 700, 703]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Quando o desenvolvedor escreve e executa tasks Ansible testando condicionais na prática, a capacidade e a potência flexível do Jinja2 garantem operações lógicas em cima dos 'Registered Variables'. O autor, no módulo Ansible de testes para validar o app de testes de infra do Cap 5 e 9 invoca um operador da manipulação de array em strings (`stdout`). Como checar a validação interna na variável `myapp_result.stdout` procurando uma falha explícita com sucesso condicional de forma nativa e enxuta nas regras do Ansible `when`?",
+    opcoes: [
+      "A. when: regex_verify('ready', myapp_result.stdout)",
+      "B. when: 'ready' in myapp_result.stdout",
+      "C. when: find_string_pattern('ready', myapp_result.stdout)",
+      "D. when: myapp_result.stdout.exec_regex('ready') == TRUE"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O sistema de expressão provido pelos plugins Jinja2 do Ansible aceita o filtro/teste 'in' simples do Python de maneira elegantemente clara para testar presenças lexicais e strings de match. Exemplo: `when: \"'ready' in myapp_result.stdout\"`, tornando os testes funcionais nas condicionais limpos e fáceis no tracking de log do stdout das execuções atreladas à variável e a sua inspeção do teste do fluxo programado da execução infraestrutural[cite: 330]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "As metodologias recomendadas (Best Practices) orientam organizar complexidades da automação. Para criar variáveis ou sobreposições específicas (overrides) em um template de infraestruturas cruzadas Debian e RHEL em seu repositório de provisionamento de Ansible Roles, que arquitetura o Ansible prefere para carregar variáveis de família nativa dos nós e sobrescrever dados fixos dinamicamente reduzindo complexidade e códigos duplicados nos playbooks modulares e otimizando código e tempo na orquestração?",
+    opcoes: [
+      "A. Escrevendo laços e filtros IF ELSE gigantes nas pastas padrão defaults de variáveis.",
+      "B. Invocando módulos nativos em Ruby e RubyGems formatados estritamente na árvore local do arquivo do inventário host local em conjunto de um alias bash compilado localmente em tempo de runtime dinâmico por um parser Ruby.",
+      "C. Injetar com auxílio de scripts de migração C e compilação do Makefiles todas as propriedades dos arquivos na pasta root de controle mestre.",
+      "D. Utilizando na task principal da role um include dinâmico via módulo de carregar os arquivos referenciando as OS (exemplo: `include_vars: \"{{ ansible_os_family }}.yml\"`) e definindo as rotas ou variáveis nativas como `vars/Debian.yml` e `vars/RedHat.yml` nos arquivos de vars, sobrepondo assim e isolando o OS específico as configurações necessárias perfeitamente enxutas modularizando eficientemente os artefatos infraestruturais e padronizando sem verbosidade."
+    ],
+    correta: "D",
+    explicacao: "D é a correta. O autor recomenda e demonstra que as Boas Práticas apontam e encorajam a separar dados variáveis e condicionais estruturais OS-specific de fato isolando-os em arquivos de vars designados (como `Debian.yml` e `RedHat.yml`) no subdiretório de vars e acionar a inclusão deles dinamicamente pela variável magic `$ansible_os_family` via a instrução `include_vars: \"{{ ansible_os_family }}.yml\"`, limpando e simplificando o código original do playbook de checagens IF intermináveis limitantes[cite: 393, 394]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Ao escrever YAMLs em playbooks (no Apêndice B de Conventions), a equipe pode escolher definir pares de chave=valor (key=value) das configurações na mesma linha extensa ou criar estruturas multiline map/dicionário completas (`key: value`). O autor enumera vantagens para NÃO utilizar a sintaxe on-line condensada de shorthand. Qual desses problemas é enfrentado ao usar a sintaxe shorthand curta em larga escala em repositórios de equipes?",
+    opcoes: [
+      "A. A conversão falha, pois a compilação YAML para C estrita proíbe as linhas condensadas impedindo que a formatação da sintaxe seja analisada no motor PyYAML.",
+      "B. Sintaxe shorthand no YAML diminui o log trace interno e impossibilita debug do Ansible Console.",
+      "C. Exibe falha em conversores json nativos inviabilizando compilação do playbook na pasta de import estrito e corrompendo a leitura do diretório roles no modo master local da árvore principal.",
+      "D. Variáveis e parâmetros do tipo número, flutuantes e boleanos (`true/false`) são forçosamente convertidos à strings limitando funções lógicas tipadas nas rotinas ou templates posteriores, dificulta bastante o diff history e a leitura limpa do código-fonte versionado git de grandes parâmetros encadeados numa extensa linha invisível truncada em editores comuns ou monitores de formato reduzido de uso prático na checagem diária das ferramentas na pipeline."
+    ],
+    correta: "D",
+    explicacao: "D é a correta. As melhores práticas orientam abandonar aos poucos o `key=value` shorthand string extenso pois, a longo prazo, sistemas de Version Control do Github ou difftools não exibem e falham em isolar claramente visualmente cada instrução modificada na string linear enorme de mudança de código. Além dessa barreira visual obstrutiva nas IDEs comuns e nos diffs do SVN ou Git, a conversão silenciosa força variáveis nativas estritamente tipadas a migrar estruturalmente em runtime para cadeias de string desregulando tipagem booleana, limitando o tratamento complexo subsequente de scripts e dicionários[cite: 856]."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Como o autor demonstra o processo local e eficiente para a delegação exata ('Delegate') de uma infraestrutura para checar com espera temporizada a liberação do acesso remoto do SSH no servidor web de aplicação ou banco de dados AWS recém criado via API provisionado dinamicamente durante a sequência orquestrada em andamento pelo Ansible sem o uso do sleep de forma passiva nativa para que assim as tarefas dos módulos do deploy seguinte de playbooks prossigam imediatamente nos nós sem erro timeout precoce e inconsistência do SO bootando assincronamente as portas no terminal local?",
+    opcoes: [
+      "A. O play invoca através de loops interativos scripts em Perl invocando timeout de SSH em cada nó da rede estática redefinida na inicialização do boot da nova interface.",
+      "B. Um comando shell inline invocado no host virtual efetuado num cron reverso no /etc do node que retorna código exit 0 assíncrono finalizando a verificação temporizada e repassando o callback do script via UDP pro controller na web isolando e resetando o playbook.",
+      "C. Invocando no node mestre ('Control node' ou playbook root) a task via `local_action` ou `delegate_to: 127.0.0.1` acionando na tarefa principal do playbook o robusto módulo TCP/Socket `wait_for` amarrado dinamicamente ao host configurado `port=22 host={{ inventory_hostname }}` bloqueando e pausando inteligentemente o play exatamente em seu local ativo o tempo hábil da instância acordar no ping port localizando assim o start daemon do daemon SSH eficientemente aguardando antes da configuração local.",
+      "D. Aplicando um hook de pipeline do Github Actions e integrando ping estendido com webhook passivo de TCP local via IP sec do Travis no node provido configurado nativo via socket API virtual local restrito localmente."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Ao invés do uso falho do pause, shell loops de sleeps ou testes com falsos erros parando e travando a CLI ou a Tower de modo obscuro ao provisionar uma máquina com playbook (no AWS, DigitalOcean), utiliza-se o mecanismo nativo testado `local_action:` executando isoladamente o módulo de checagem de timeout TCP de forma ativa `wait_for port=22 host={{ inventory_hostname }}` paralisando sutilmente na rede de origem a conexão e testando assertivamente apenas essa porta do socket alvo garantindo e permitindo de forma elegante sincronizar o ambiente provendo a exata liberação instantânea ao acesso remoto de SSH recém levantado pela nuvem (Cloud init) mitigando falhas e timeouts de conexão predatórias nos hosts alvos remotos logo após seu acionamento e viabilizando o setup instantâneo[cite: 529]."
   }
 
         // ==========================================
