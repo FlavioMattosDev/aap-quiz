@@ -1,826 +1,1238 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulador - Ansible & Red Hat AAP</title>
-
-    <style>
-      :root {
-        /* Tema Red Hat */
-        --rh-red: #EE0000;
-        --rh-red-dark: #CC0000;
-        --rh-black: #151515;
-        --rh-grey-dark: #333333;
-        --rh-grey-medium: #d2d2d2;
-        --rh-grey-light: #f3f4f5;
-        --text-color: #151515;
-        --white: #ffffff;
-        
-        /* Feedback Colors */
-        --correct-bg: #e6f7ec;
-        --correct-border: #3e8a2a;
-        --incorrect-bg: #fdecea;
-        --incorrect-border: #c9190b;
-        --warning-bg: #fdf7e7;
-        --warning-border: #f0ab00;
-        
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        --border-radius: 6px;
-      }
-
-      [data-theme="dark"] {
-        --rh-grey-light: #1f1f1f;
-        --rh-grey-medium: #3b3b3b;
-        --rh-grey-dark: #8a8a8a;
-        --text-color: #e8e8e8;
-        --white: #262626;
-        --rh-black: #101010;
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        --correct-bg: #1a3a1a;
-        --correct-border: #52c41a;
-        --incorrect-bg: #3a1a1a;
-        --incorrect-border: #ff4d4f;
-        --warning-bg: #3a2a1a;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html, body {
-        height: 100%;
-      }
-
-      body {
-        font-family: 'Red Hat Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background-color: var(--rh-grey-light);
-        color: var(--text-color);
-        display: flex;
-        flex-direction: column;
-        line-height: 1.6;
-        transition: background-color 0.3s, color 0.3s;
-      }
-
-      .app-header {
-        background-color: var(--rh-black);
-        color: var(--white);
-        padding: 1rem 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        z-index: 100;
-        border-bottom: 3px solid var(--rh-red);
-      }
-
-      .app-header h1 {
-        font-size: 1.5rem;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .header-controls {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
-
-      .theme-toggle {
-        background: none;
-        border: 1px solid var(--rh-grey-medium);
-        color: var(--white);
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: all 0.2s;
-      }
-
-      .theme-toggle:hover {
-        background: var(--rh-grey-dark);
-        border-color: var(--white);
-      }
-
-      .quiz-stats {
-        display: flex;
-        gap: 1.5rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        flex-wrap: wrap;
-      }
-
-      .quiz-stats span {
-        background-color: var(--rh-grey-dark);
-        padding: 0.3rem 0.6rem;
-        border-radius: 4px;
-      }
-
-      main {
-        flex: 1;
-        display: grid;
-        place-items: center;
-        padding: 2rem;
-        overflow-y: auto;
-      }
-
-      .page-section {
-        width: 100%;
-        max-width: 900px;
-        background: var(--white);
-        padding: 2.5rem;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow);
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      .btn {
-        font-size: 1rem;
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        transition: background-color 0.2s ease, transform 0.1s ease;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-      }
-
-      .btn:active {
-        transform: scale(0.98);
-      }
-
-      .btn-primary {
-        background-color: var(--rh-red);
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background-color: var(--rh-red-dark);
-      }
-
-      .btn-secondary {
-        background-color: var(--rh-grey-medium);
-        color: var(--rh-black);
-      }
-
-      .btn-secondary:hover {
-        background-color: #b0b0b0;
-      }
-
-      .btn-danger {
-        background-color: var(--rh-black);
-        color: #fff;
-        border: 1px solid var(--rh-red);
-      }
-      .btn-danger:hover {
-        background-color: var(--rh-red);
-      }
-
-      .btn[disabled] {
-        background-color: var(--rh-grey-medium);
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
-
-      /* Config Page */
-      #config-page h2 {
-        color: var(--rh-black);
-        margin-bottom: 1.5rem;
-        text-align: center;
-        border-bottom: 2px solid var(--rh-red);
-        padding-bottom: 10px;
-      }
-
-      [data-theme="dark"] #config-page h2 {
-        color: var(--white);
-      }
-
-      .config-grid {
-        display: grid;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-
-      .config-item {
-        border: 1px solid var(--rh-grey-medium);
-        padding: 1.25rem;
-        border-radius: var(--border-radius);
-        background: var(--rh-grey-light);
-      }
-
-      .config-item label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        color: var(--text-color);
-      }
-
-      .slider-group {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      #questions-slider {
-        flex: 1;
-        cursor: pointer;
-        -webkit-appearance: none;
-        appearance: none;
-        height: 8px;
-        background: var(--rh-grey-medium);
-        border-radius: 5px;
-        outline: none;
-      }
-      #questions-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        background: var(--rh-red);
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      #slider-value {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: var(--rh-red);
-        min-width: 30px;
-        text-align: right;
-      }
-
-      .domain-filter {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 0.75rem;
-      }
-
-      .domain-checkbox {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 1rem;
-        background: var(--white);
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        transition: background 0.2s;
-        border: 1px solid var(--rh-grey-medium);
-      }
-
-      .domain-checkbox:hover {
-        background: var(--rh-grey-light);
-        border-color: var(--rh-red);
-      }
-
-      .domain-checkbox input {
-        cursor: pointer;
-        margin-top: 0.25rem;
-        flex-shrink: 0;
-        accent-color: var(--rh-red);
-      }
-
-      .domain-checkbox span {
-        font-size: 0.9rem;
-        line-height: 1.4;
-      }
-
-      .domain-checkbox strong {
-        display: block;
-        color: var(--rh-red-dark);
-        margin-bottom: 0.25rem;
-      }
-
-      [data-theme="dark"] .domain-checkbox strong {
-        color: var(--rh-red);
-      }
-
-      .mode-selector {
-        display: flex;
-        gap: 1rem;
-      }
-
-      .mode-option {
-        flex: 1;
-        padding: 1rem;
-        border: 2px solid var(--rh-grey-medium);
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.2s;
-      }
-
-      .mode-option:hover {
-        border-color: var(--rh-red);
-      }
-
-      .mode-option.selected {
-        border-color: var(--rh-red);
-        background: var(--warning-bg);
-      }
-
-      .mode-option input {
-        display: none;
-      }
-
-      .mode-option strong {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: var(--text-color);
-      }
-
-      .mode-option small {
-        color: var(--rh-grey-dark);
-      }
-
-      .button-group {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      /* Quiz Page */
-      .question-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-
-      .bookmark-btn {
-        background: none;
-        border: 2px solid var(--rh-grey-medium);
-        color: var(--text-color);
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-        font-weight: bold;
-      }
-
-      .bookmark-btn:hover,
-      .bookmark-btn.bookmarked {
-        border-color: var(--warning-border);
-        background-color: var(--warning-bg);
-        color: var(--rh-black);
-      }
-
-      .question-card {
-        margin-bottom: 1.5rem;
-      }
-
-      #question-domain {
-        font-size: 0.9rem;
-        color: var(--text-color);
-        margin-bottom: 1rem;
-        background: var(--rh-grey-light);
-        padding: 0.75rem 1rem;
-        border-radius: 4px;
-        border-left: 4px solid var(--rh-red);
-      }
-
-      #question-domain strong {
-        color: var(--rh-red-dark);
-        font-size: 1rem;
-        display: block;
-      }
-      
-      [data-theme="dark"] #question-domain strong {
-        color: var(--rh-red);
-      }
-
-      #question-text {
-        font-size: 1.15rem;
-        font-weight: 600;
-        margin-top: 1.5rem;
-        margin-bottom: 1.5rem;
-        white-space: pre-wrap;
-        color: var(--text-color);
-      }
-
-      .options-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .option {
-        display: flex;
-        align-items: flex-start;
-        padding: 1rem;
-        border: 2px solid var(--rh-grey-medium);
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        transition: border-color 0.2s ease, background-color 0.2s ease;
-        background: var(--white);
-      }
-
-      .option:hover {
-        border-color: var(--rh-red);
-      }
-
-      .option input[type="radio"],
-      .option input[type="checkbox"] {
-        margin-top: 0.35rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-        width: 1.2em;
-        height: 1.2em;
-        cursor: pointer;
-        accent-color: var(--rh-red);
-      }
-
-      .option label {
-        cursor: pointer;
-        width: 100%;
-        font-family: monospace;
-        font-size: 0.95rem;
-      }
-
-      .option.correct {
-        background-color: var(--correct-bg);
-        border-color: var(--correct-border);
-        font-weight: bold;
-      }
-
-      .option.incorrect {
-        background-color: var(--incorrect-bg);
-        border-color: var(--incorrect-border);
-      }
-
-      .option.correct.selected {
-        box-shadow: 0 0 8px var(--correct-border);
-      }
-
-      .option.incorrect.selected {
-        font-weight: bold;
-        box-shadow: 0 0 8px var(--incorrect-border);
-      }
-
-      .explanation-card {
-        margin-top: 1.5rem;
-        padding: 1.25rem 1.5rem;
-        border-radius: var(--border-radius);
-        border: 2px solid;
-        white-space: pre-wrap;
-        line-height: 1.7;
-      }
-
-      .explanation-card h3 {
-        margin-bottom: 0.75rem;
-        color: var(--text-color);
-        font-size: 1.2rem;
-      }
-
-      .explanation-card.correct {
-        background-color: var(--correct-bg);
-        border-color: var(--correct-border);
-      }
-
-      .explanation-card.incorrect {
-        background-color: var(--incorrect-bg);
-        border-color: var(--incorrect-border);
-      }
-
-      .quiz-actions {
-        margin-top: 2rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-      }
-
-      /* Results Page */
-      #results-page h2 {
-        color: var(--text-color);
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid var(--rh-red);
-        padding-bottom: 10px;
-      }
-
-      #results-summary {
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-        background: var(--rh-grey-light);
-        padding: 1.5rem;
-        border-radius: var(--border-radius);
-        border-left: 4px solid var(--rh-red);
-      }
-
-      #results-summary p {
-        margin-bottom: 0.5rem;
-      }
-
-      #results-summary .result-score {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--rh-red-dark);
-      }
-
-      [data-theme="dark"] #results-summary .result-score {
-        color: var(--rh-red);
-      }
-
-      .domain-stats {
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background: var(--rh-grey-light);
-        border-radius: var(--border-radius);
-      }
-
-      .domain-stat-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        background: var(--white);
-        border-radius: 4px;
-        border-left: 4px solid var(--rh-red);
-      }
-
-      .stat-bar {
-        flex: 1;
-        height: 8px;
-        background: var(--rh-grey-medium);
-        border-radius: 4px;
-        margin: 0 1rem;
-        overflow: hidden;
-      }
-
-      .stat-bar-fill {
-        height: 100%;
-        background: var(--rh-red);
-        transition: width 0.3s ease;
-      }
-
-      #wrong-answers-list h3 {
-        margin-bottom: 1rem;
-        border-bottom: 2px solid var(--rh-grey-medium);
-        padding-bottom: 0.5rem;
-      }
-
-      .wrong-answer-item {
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--rh-grey-medium);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-      }
-
-      .wrong-answer-item h4 {
-        background: var(--rh-black);
-        color: white;
-        padding: 0.75rem 1rem;
-        font-size: 1.1rem;
-      }
-
-      .wrong-answer-item p {
-        padding: 0 1rem 0.5rem 1rem;
-      }
-
-      .wrong-answer-item .task-desc {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-        background: var(--rh-grey-light);
-        border-bottom: 1px solid var(--rh-grey-medium);
-      }
-
-      .wrong-answer-item .explanation {
-        background: var(--incorrect-bg);
-        border-top: 1px dashed var(--incorrect-border);
-        padding: 1rem;
-        white-space: pre-wrap;
-        font-size: 0.95rem;
-      }
-
-      .btn-sm {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.9rem;
-      }
-
-      /* Modal de confirmação de abandono */
-      .abandon-modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.55);
-        z-index: 999;
-        align-items: center;
-        justify-content: center;
-      }
-      .abandon-modal-overlay.active {
-        display: flex;
-      }
-      .abandon-modal {
-        background: var(--white);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        border-top: 4px solid var(--rh-red);
-        text-align: center;
-      }
-      .abandon-modal h3 {
-        margin-bottom: 0.75rem;
-        color: var(--text-color);
-      }
-      .abandon-modal p {
-        margin-bottom: 1.5rem;
-        color: var(--rh-grey-dark);
-        font-size: 0.95rem;
-      }
-      .abandon-modal-btns {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-      }
-
-      /* Badge modo exame */
-      .exam-mode-badge {
-        display: inline-block;
-        background: var(--rh-red);
-        color: #fff;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        letter-spacing: 0.05em;
-        margin-left: 0.5rem;
-        vertical-align: middle;
-      }
-
-      @media (max-width: 600px) {
-        .app-header {
-          padding: 1rem;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        main { padding: 1rem; }
-        .page-section { padding: 1.5rem; }
-        .quiz-actions, .mode-selector { flex-direction: column; }
-        .btn { width: 100%; }
-      }
-    </style>
-  </head>
-  <body>
-    <header class="app-header">
-      <h1>🔴 Red Hat AAP Simulator</h1>
-      <div id="quiz-stats" class="quiz-stats hidden">
-        <span id="question-progress-display">Questão: 0/0</span>
-        <span id="timer-display">Tempo: 00:00</span>
-        <span id="score-display">Acertos: 0/0 (0%)</span>
-      </div>
-      <div class="header-controls">
-        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">🌙 Escuro</button>
-        <button id="global-reset-btn" class="btn btn-danger hidden" aria-label="Reiniciar o Quiz">Abandonar Quiz</button>
-      </div>
-    </header>
-
-    <main>
-      <!-- CONFIGURAÇÃO -->
-      <section id="config-page" class="page-section">
-        <h2>Configuração do Simulado</h2>
-
-        <div class="config-grid">
-          <div class="config-item">
-            <label for="questions-slider">Número de Perguntas:</label>
-            <div class="slider-group">
-              <input type="range" id="questions-slider" min="1" max="40" value="10" />
-              <span id="slider-value">10</span>
-            </div>
-          </div>
-
-          <div class="config-item">
-            <label>Modo de Simulado:</label>
-            <div class="mode-selector">
-              <label class="mode-option selected">
-                <input type="radio" name="quiz-mode" value="study" checked />
-                <strong>📚 Prática / Entrevista</strong>
-                <small>Feedback detalhado após cada resposta</small>
-              </label>
-              <label class="mode-option">
-                <input type="radio" name="quiz-mode" value="exam" />
-                <strong>📝 Modo Exame (EX294/EX467)</strong>
-                <small>Sem feedback imediato. Resultado no final.</small>
-              </label>
-            </div>
-          </div>
-
-          <div class="config-item">
-            <label>Filtrar por Módulos:</label>
-            <div class="domain-filter">
-              <label class="domain-checkbox">
-                <input type="checkbox" value="all" checked />
-                <span><strong>Todos os Módulos</strong></span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="1" checked />
-                <span><strong>Módulo 1</strong>Fundamentos do Ansible Core</span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="2" checked />
-                <span><strong>Módulo 2</strong>Ansible Avançado (Roles, Jinja2)</span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="3" checked />
-                <span><strong>Módulo 3</strong>Arquitetura Red Hat AAP</span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="4" checked />
-                <span><strong>Módulo 4</strong>Automation Controller</span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="5" checked />
-                <span><strong>Módulo 5</strong>Execution Environments</span>
-              </label>
-              <label class="domain-checkbox">
-                <input type="checkbox" class="domain-check" value="6" checked />
-                <span><strong>Módulo 6</strong>Boas Práticas e CI/CD</span>
-              </label>
-            </div>
-          </div>
+<html lang="pt-br" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AAP Simulator — Red Hat EX294 · EX467</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════
+   STUDIO DESIGN SYSTEM — LIGHT THEME (DEFAULT)
+═══════════════════════════════════════════════════ */
+:root {
+  --bg:         #f9f6f1;
+  --bg2:        #f2ede5;
+  --bg3:        #e8e1d6;
+  --bg4:        #ddd5c6;
+  --surface:    #ffffff;
+  --surface2:   #fdfbf8;
+  --clay:       #c4704a;
+  --clay-lt:    #d4865e;
+  --clay-dk:    #a85c3a;
+  --clay-xlt:   rgba(196,112,74,0.08);
+  --clay-glow:  rgba(196,112,74,0.18);
+  --sage:       #5c7a65;
+  --sage-lt:    rgba(92,122,101,0.1);
+  --sand:       #b09a7e;
+  --ink:        #1c1814;
+  --ink2:       #3d3530;
+  --ink3:       #6b605a;
+  --ink4:       #9b8f89;
+  --ink5:       #c4b8b2;
+  --border:     #ddd5c8;
+  --border2:    #cfc5b8;
+  --border3:    #e8e1d9;
+  --correct-bg: #edf7f1;
+  --correct-bd: #3d7a5a;
+  --correct-tx: #2d5c42;
+  --wrong-bg:   #fdf0ee;
+  --wrong-bd:   #b84a3a;
+  --wrong-tx:   #8c3228;
+  --warn-bg:    #fdf7ed;
+  --warn-bd:    #c4893a;
+
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans:  'Geist', -apple-system, system-ui, sans-serif;
+  --font-mono:  'Geist Mono', 'Courier New', monospace;
+
+  --shadow-xs:  0 1px 2px rgba(28,24,20,0.06);
+  --shadow-sm:  0 1px 4px rgba(28,24,20,0.08), 0 2px 8px rgba(28,24,20,0.04);
+  --shadow-md:  0 4px 16px rgba(28,24,20,0.10), 0 1px 4px rgba(28,24,20,0.06);
+  --shadow-lg:  0 8px 32px rgba(28,24,20,0.12), 0 2px 8px rgba(28,24,20,0.06);
+  --shadow-xl:  0 16px 48px rgba(28,24,20,0.15);
+
+  --radius-xs:  4px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
+
+  --transition: 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   DARK THEME
+═══════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #161210;
+  --bg2:        #1e1916;
+  --bg3:        #28221e;
+  --bg4:        #332c27;
+  --surface:    #201c19;
+  --surface2:   #251f1c;
+  --clay:       #d4865e;
+  --clay-lt:    #e09870;
+  --clay-dk:    #b86e4a;
+  --clay-xlt:   rgba(212,134,94,0.1);
+  --clay-glow:  rgba(212,134,94,0.2);
+  --sage:       #6d9478;
+  --sage-lt:    rgba(109,148,120,0.12);
+  --sand:       #8a7a6a;
+  --ink:        #f0ebe4;
+  --ink2:       #d4ccc4;
+  --ink3:       #9a8f88;
+  --ink4:       #6a605a;
+  --ink5:       #3d3530;
+  --border:     #332c27;
+  --border2:    #3d3530;
+  --border3:    #2a2420;
+  --correct-bg: #162118;
+  --correct-bd: #4d9a6a;
+  --correct-tx: #6dba8a;
+  --wrong-bg:   #1e1210;
+  --wrong-bd:   #c4524a;
+  --wrong-tx:   #e07070;
+  --warn-bg:    #1e1810;
+  --warn-bd:    #c4893a;
+
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.3);
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.5);
+  --shadow-xl:  0 16px 48px rgba(0,0,0,0.6);
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE RESET & TYPOGRAPHY
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+  transition: background-color var(--transition), color var(--transition);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain texture */
+body::after {
+  content: \'\';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.03\'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+[data-theme="dark"] body::after { opacity: 0.25; }
+
+/* ═══════════════════════════════════════════════════
+   APP HEADER
+═══════════════════════════════════════════════════ */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+/* Logo */
+.logo-group { display: flex; align-items: center; gap: 0.75rem; }
+
+.logo-mark {
+  width: 38px; height: 38px;
+  background: var(--clay);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--clay-glow);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.logo-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.logo-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--ink4);
+  letter-spacing: 0.08em;
+}
+
+/* Quiz stats in header */
+.quiz-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.85rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  transition: background var(--transition);
+}
+.stat-pill-label { color: var(--ink4); }
+.stat-pill-val {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+.stat-pill.accent { border-color: var(--clay); }
+.stat-pill.accent .stat-pill-val { color: var(--clay); }
+
+.header-controls { display: flex; gap: 0.5rem; align-items: center; }
+
+/* Theme toggle */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--ink3);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.theme-toggle:hover { border-color: var(--clay); color: var(--clay); background: var(--clay-xlt); }
+
+/* Header abandon button */
+.btn-abandon-header {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-full);
+  color: var(--ink3);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-abandon-header:hover { border-color: var(--wrong-bd); color: var(--wrong-tx); background: var(--wrong-bg); }
+
+/* Progress bar */
+.progress-bar { height: 3px; background: var(--bg3); }
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--clay-lt), var(--clay));
+  border-radius: 0 2px 2px 0;
+  transition: width 0.5s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════════ */
+main {
+  flex: 1;
+  padding: 2.5rem 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hidden { display: none !important; }
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--clay);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--clay-glow), var(--shadow-xs);
+}
+.btn-primary:hover {
+  background: var(--clay-dk);
+  box-shadow: 0 4px 16px var(--clay-glow), var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink2);
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-xs);
+}
+.btn-secondary:hover {
+  border-color: var(--clay);
+  color: var(--clay);
+  background: var(--clay-xlt);
+}
+
+.btn-danger {
+  background: var(--wrong-bg);
+  color: var(--wrong-tx);
+  border: 1px solid var(--wrong-bd);
+}
+.btn-danger:hover { background: var(--wrong-bd); color: #fff; }
+
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-sm { padding: 0.4rem 0.9rem; font-size: 0.78rem; }
+.btn-block { width: 100%; }
+
+/* ═══════════════════════════════════════════════════
+   CONFIG PAGE
+═══════════════════════════════════════════════════ */
+#config-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeUp 0.35s ease both;
+}
+
+.config-header { margin-bottom: 0.5rem; }
+.config-header h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+  line-height: 1.2;
+}
+.config-header p {
+  font-size: 0.88rem;
+  color: var(--ink4);
+}
+
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition), border-color var(--transition);
+}
+.config-card-title {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink4);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border3);
+}
+
+/* Slider */
+.slider-wrap { display: flex; align-items: center; gap: 1.25rem; }
+.slider-track { flex: 1; position: relative; }
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg3);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  background: var(--clay);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px var(--clay-xlt), var(--shadow-sm);
+  transition: box-shadow var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 6px var(--clay-xlt), var(--shadow-md);
+}
+.slider-value {
+  min-width: 52px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clay);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Mode selector */
+.mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem 1.25rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface2);
+}
+.mode-option:hover { border-color: var(--clay-lt); background: var(--clay-xlt); }
+.mode-option.selected {
+  border-color: var(--clay);
+  background: var(--clay-xlt);
+  box-shadow: 0 0 0 3px var(--clay-glow);
+}
+.mode-option input { display: none; }
+.mode-option-icon { font-size: 1.4rem; margin-bottom: 0.25rem; }
+.mode-option-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.mode-option.selected .mode-option-title { color: var(--clay); }
+.mode-option-desc {
+  font-size: 0.75rem;
+  color: var(--ink4);
+  line-height: 1.4;
+}
+
+/* Module filter */
+.domain-filter {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.6rem;
+}
+.domain-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface2);
+}
+.domain-checkbox:hover { border-color: var(--clay-lt); background: var(--clay-xlt); }
+.domain-checkbox:has(input:checked) {
+  border-color: var(--clay);
+  background: var(--clay-xlt);
+}
+.domain-checkbox input {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--clay);
+  flex-shrink: 0;
+}
+.domain-checkbox span {
+  font-size: 0.82rem;
+  color: var(--ink3);
+  line-height: 1.35;
+}
+.domain-checkbox span strong {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--clay);
+  margin-bottom: 0.1rem;
+}
+
+/* Config button group */
+.config-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+
+/* Stats grid on config page (bookmark count) */
+.config-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.config-stat-label { font-size: 0.82rem; color: var(--ink3); }
+.config-stat-val { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 500; color: var(--clay); }
+
+/* ═══════════════════════════════════════════════════
+   QUIZ PAGE
+═══════════════════════════════════════════════════ */
+#quiz-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeUp 0.3s ease both;
+}
+
+/* Question meta bar */
+.question-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.q-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--ink4);
+  flex-wrap: wrap;
+}
+.q-breadcrumb-sep { color: var(--border2); }
+.q-breadcrumb-domain {
+  color: var(--clay);
+  font-weight: 500;
+}
+.q-breadcrumb-task {
+  color: var(--ink4);
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+}
+
+/* Bookmark button */
+.bookmark-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius-full);
+  color: var(--ink3);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.bookmark-btn:hover { border-color: var(--warn-bd); color: var(--warn-bd); background: var(--warn-bg); }
+.bookmark-btn.bookmarked {
+  background: var(--warn-bg);
+  border-color: var(--warn-bd);
+  color: var(--warn-bd);
+}
+
+/* Question card */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.q-card-header {
+  padding: 1.5rem 2rem 0;
+}
+
+.q-number-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--clay-xlt);
+  border: 1px solid var(--clay-glow);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--clay);
+  margin-bottom: 1rem;
+}
+
+.exam-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-bd);
+  border-radius: var(--radius-full);
+  padding: 0.2rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--warn-bd);
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Question text */
+#question-domain {
+  display: none; /* replaced by breadcrumb */
+}
+
+#question-text {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.65;
+  color: var(--ink);
+  padding: 0 2rem 1.5rem;
+  font-weight: 400;
+}
+
+/* Options */
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0 1.5rem 2rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.option:hover {
+  border-color: var(--clay-lt);
+  background: var(--clay-xlt);
+  box-shadow: var(--shadow-xs);
+}
+.option.correct {
+  border-color: var(--correct-bd);
+  background: var(--correct-bg);
+}
+.option.incorrect {
+  border-color: var(--wrong-bd);
+  background: var(--wrong-bg);
+}
+.option.selected {
+  border-color: var(--clay);
+  background: var(--clay-xlt);
+  box-shadow: 0 0 0 3px var(--clay-glow);
+}
+.option.correct.selected { box-shadow: 0 0 0 3px rgba(61,122,90,0.2); }
+.option.incorrect.selected { box-shadow: 0 0 0 3px rgba(184,74,58,0.2); }
+
+.option input[type="radio"],
+.option input[type="checkbox"] {
+  display: none; /* replaced by visual letter */
+}
+
+/* Letter badge */
+.opt-letter {
+  width: 28px; min-width: 28px; height: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink3);
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+.option label { cursor: pointer; }
+.option.selected .opt-letter { background: var(--clay); border-color: var(--clay); color: #fff; }
+.option.correct .opt-letter  { background: var(--correct-bd); border-color: var(--correct-bd); color: #fff; }
+.option.incorrect .opt-letter{ background: var(--wrong-bd); border-color: var(--wrong-bd); color: #fff; }
+
+.option label {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink2);
+  cursor: pointer;
+  padding-top: 0.05rem;
+  flex: 1;
+  font-family: var(--font-sans);
+}
+.option.selected label { color: var(--ink); font-weight: 500; }
+.option.correct label  { color: var(--correct-tx); }
+.option.incorrect label{ color: var(--wrong-tx); }
+
+/* Explanation card */
+.explanation-card {
+  margin: 0 1.5rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  animation: fadeIn 0.3s ease both;
+}
+.explanation-card.correct {
+  background: var(--correct-bg);
+  border-color: var(--correct-bd);
+}
+.explanation-card.incorrect {
+  background: var(--wrong-bg);
+  border-color: var(--wrong-bd);
+}
+.explanation-card h3 {
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+}
+.explanation-card.correct h3 { color: var(--correct-bd); }
+.explanation-card.incorrect h3 { color: var(--wrong-bd); }
+.explanation-card p {
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--ink3);
+}
+
+/* Quiz actions */
+.quiz-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESULTS PAGE
+═══════════════════════════════════════════════════ */
+#results-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeUp 0.35s ease both;
+}
+
+.results-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.results-donut-wrap {
+  position: relative;
+  width: 110px; height: 110px;
+  flex-shrink: 0;
+}
+.donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.donut-bg   { fill: none; stroke: var(--bg3); stroke-width: 8; }
+.donut-fill {
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.donut-pct {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--clay);
+  line-height: 1;
+}
+.donut-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--ink4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.results-stats { flex: 1; }
+.results-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.result-stat {
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  text-align: center;
+}
+.result-stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--ink);
+  display: block;
+}
+.result-stat-val.good { color: var(--correct-bd); }
+.result-stat-val.bad  { color: var(--wrong-bd); }
+.result-stat-label {
+  font-size: 0.68rem;
+  color: var(--ink4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+}
+
+/* Domain stats */
+.domain-stats {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+.domain-stats h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+
+.domain-stat-item {
+  display: grid;
+  grid-template-columns: 1fr 120px 80px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border3);
+  font-size: 0.8rem;
+  color: var(--ink3);
+}
+.domain-stat-item:last-child { border-bottom: none; }
+.stat-bar {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
+
+/* Wrong answers list */
+#wrong-answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+#wrong-answers-list > h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.wrong-answer-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--transition);
+}
+.wrong-answer-item:hover { box-shadow: var(--shadow-sm); }
+
+.wrong-answer-item h4 {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 1.25rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--clay);
+  font-weight: 500;
+}
+.wrong-answer-item p {
+  padding: 1rem 1.25rem 0.5rem;
+  font-size: 0.86rem;
+  color: var(--ink2);
+  line-height: 1.55;
+}
+.wrong-answer-item .explanation {
+  padding: 0.85rem 1.25rem 1rem;
+  background: var(--wrong-bg);
+  border-top: 1px dashed var(--wrong-bd);
+  font-size: 0.83rem;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* Results actions */
+.results-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════
+   BOOKMARKS PAGE
+═══════════════════════════════════════════════════ */
+#bookmarks-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeUp 0.3s ease both;
+}
+#bookmarks-page h2 {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--ink);
+}
+#bookmarks-list { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ═══════════════════════════════════════════════════
+   ABANDON MODAL
+═══════════════════════════════════════════════════ */
+.abandon-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(28,24,20,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.abandon-modal-overlay.active { display: flex; }
+
+.abandon-modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  text-align: center;
+  animation: scaleIn 0.25s ease both;
+}
+.abandon-modal-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.abandon-modal h3 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin-bottom: 0.6rem;
+}
+.abandon-modal p {
+  font-size: 0.88rem;
+  color: var(--ink4);
+  margin-bottom: 2rem;
+  line-height: 1.55;
+}
+.abandon-modal-btns { display: flex; gap: 0.75rem; justify-content: center; }
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Stagger options */
+.options-container .option:nth-child(1) { animation: fadeUp 0.25s 0.04s ease both; }
+.options-container .option:nth-child(2) { animation: fadeUp 0.25s 0.08s ease both; }
+.options-container .option:nth-child(3) { animation: fadeUp 0.25s 0.12s ease both; }
+.options-container .option:nth-child(4) { animation: fadeUp 0.25s 0.16s ease both; }
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .app-header { padding: 0 1rem; }
+  .logo-text { display: none; }
+  main { padding: 1.25rem 1rem; }
+  .quiz-stats { gap: 0.4rem; }
+  .stat-pill { padding: 0.25rem 0.6rem; font-size: 0.72rem; }
+  .mode-selector { grid-template-columns: 1fr; }
+  .results-hero { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .results-grid { grid-template-columns: 1fr 1fr; }
+  #question-text { padding: 0 1.25rem 1.25rem; font-size: 1.05rem; }
+  .options-container { padding: 0 1rem 1.5rem; }
+  .quiz-actions { flex-direction: column; }
+  .quiz-actions .btn { width: 100%; }
+  .abandon-modal-btns { flex-direction: column; }
+  .domain-stat-item { grid-template-columns: 1fr 60px; }
+  .domain-stat-item .stat-bar { display: none; }
+  .q-card-header { padding: 1.25rem 1.25rem 0; }
+}
+
+@media (max-width: 400px) {
+  .header-controls .theme-toggle span { display: none; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── APP HEADER ───────────────────────────────── -->
+<header class="app-header">
+  <div class="logo-group">
+    <div class="logo-mark">A</div>
+    <div class="logo-text">
+      <span class="logo-title">AAP Simulator</span>
+      <span class="logo-sub">EX294 · EX467</span>
+    </div>
+  </div>
+
+  <div id="quiz-stats" class="quiz-stats hidden">
+    <div class="stat-pill">
+      <span class="stat-pill-label">Questão</span>
+      <span class="stat-pill-val" id="question-progress-display">0/0</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-pill-label">⏱</span>
+      <span class="stat-pill-val" id="timer-display">00:00</span>
+    </div>
+    <div class="stat-pill accent">
+      <span class="stat-pill-val" id="score-display">0/0</span>
+    </div>
+  </div>
+
+  <div class="header-controls">
+    <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-label">Escuro</span>
+    </button>
+    <button id="global-reset-btn" class="btn-abandon-header hidden">Abandonar</button>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+<!-- ── MAIN ─────────────────────────────────────── -->
+<main>
+
+  <!-- ── CONFIG PAGE ─────────────────────────── -->
+  <section id="config-page">
+    <div class="config-header">
+      <h2>Configure seu Simulado</h2>
+      <p>Escolha o número de questões, o modo e os módulos que deseja praticar.</p>
+    </div>
+
+    <!-- Slider -->
+    <div class="config-card">
+      <div class="config-card-title">Número de Questões</div>
+      <div class="slider-wrap">
+        <div class="slider-track">
+          <input type="range" id="questions-slider" min="1" max="40" value="10" aria-label="Número de questões" />
         </div>
-
-        <div class="button-group">
-          <button id="start-btn" class="btn btn-primary">Iniciar Simulado</button>
-          <button id="continue-btn" class="btn btn-secondary hidden">Continuar Simulado Salvo</button>
-          <button id="view-bookmarks-btn" class="btn btn-secondary">
-            📌 Ver Questões Marcadas (<span id="bookmark-count">0</span>)
-          </button>
-        </div>
-      </section>
-
-      <!-- QUIZ -->
-      <section id="quiz-page" class="page-section hidden">
-        <div class="question-header">
-          <div></div>
-          <button id="bookmark-btn" class="bookmark-btn" title="Marcar para revisão">📌 Marcar</button>
-        </div>
-
-        <div class="question-card">
-          <div id="question-domain">Módulo...</div>
-          <h3 id="question-text">Carregando pergunta...</h3>
-          <div id="options-container" class="options-container"></div>
-        </div>
-
-        <div id="explanation-card" class="explanation-card hidden"></div>
-
-        <div class="quiz-actions">
-          <button id="submit-btn" class="btn btn-primary">Verificar Resposta</button>
-          <button id="next-btn" class="btn btn-secondary hidden">Próxima Questão ➔</button>
-        </div>
-      </section>
-
-      <!-- BOOKMARKS -->
-      <section id="bookmarks-page" class="page-section hidden">
-        <h2>📌 Questões Marcadas para Revisão</h2>
-        <div id="bookmarks-list"></div>
-        <div class="button-group" style="margin-top: 2rem">
-          <button id="back-from-bookmarks-btn" class="btn btn-secondary">Voltar</button>
-        </div>
-      </section>
-
-      <!-- RESULTS -->
-      <section id="results-page" class="page-section hidden">
-        <h2>Resultados do Simulado</h2>
-        <div id="results-summary"></div>
-        <div id="domain-stats" class="domain-stats"></div>
-        <div id="wrong-answers-list">
-          <h3>Revisão Técnica das Respostas Erradas</h3>
-        </div>
-        <div class="button-group" style="margin-top: 2rem">
-          <button id="restart-from-results-btn" class="btn btn-primary">Voltar ao Início</button>
-        </div>
-      </section>
-    </main>
-
-    <!-- Modal de Abandono -->
-    <div id="abandon-modal-overlay" class="abandon-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="abandon-title">
-      <div class="abandon-modal">
-        <h3 id="abandon-title">⚠️ Abandonar Simulado?</h3>
-        <p>Seu progresso atual será perdido e o simulado será encerrado. Tem certeza?</p>
-        <div class="abandon-modal-btns">
-          <button id="abandon-cancel-btn" class="btn btn-secondary">Continuar Estudando</button>
-          <button id="abandon-confirm-btn" class="btn btn-danger">Abandonar</button>
-        </div>
+        <div class="slider-value" id="slider-value">10</div>
       </div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Mapeamento dos Módulos solicitados
-        const domainMap = {
+    <!-- Mode -->
+    <div class="config-card">
+      <div class="config-card-title">Modo de Simulado</div>
+      <div class="mode-selector">
+        <label class="mode-option selected">
+          <input type="radio" name="quiz-mode" value="study" checked />
+          <div class="mode-option-icon">📚</div>
+          <div class="mode-option-title">Prática / Entrevista</div>
+          <div class="mode-option-desc">Feedback detalhado com explicação após cada resposta</div>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="quiz-mode" value="exam" />
+          <div class="mode-option-icon">📝</div>
+          <div class="mode-option-title">Modo Exame</div>
+          <div class="mode-option-desc">Simula o EX294/EX467 — sem feedback até o final</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Modules -->
+    <div class="config-card">
+      <div class="config-card-title">Filtrar por Módulos</div>
+      <div class="domain-filter">
+        <label class="domain-checkbox">
+          <input type="checkbox" value="all" checked />
+          <span><strong>Todos os Módulos</strong>Selecionar todos</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="1" checked />
+          <span><strong>Módulo 1</strong>Fundamentos do Ansible Core</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="2" checked />
+          <span><strong>Módulo 2</strong>Ansible Avançado (Roles, Jinja2)</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="3" checked />
+          <span><strong>Módulo 3</strong>Arquitetura Red Hat AAP</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="4" checked />
+          <span><strong>Módulo 4</strong>Automation Controller</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="5" checked />
+          <span><strong>Módulo 5</strong>Execution Environments</span>
+        </label>
+        <label class="domain-checkbox">
+          <input type="checkbox" class="domain-check" value="6" checked />
+          <span><strong>Módulo 6</strong>Boas Práticas e CI/CD</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="config-actions">
+      <button id="start-btn" class="btn btn-primary btn-block">Iniciar Simulado</button>
+      <button id="continue-btn" class="btn btn-secondary btn-block hidden">Continuar Simulado Salvo</button>
+      <div class="config-stat-row">
+        <span class="config-stat-label">📌 Questões marcadas para revisão</span>
+        <span class="config-stat-val"><span id="bookmark-count">0</span> questões</span>
+      </div>
+      <button id="view-bookmarks-btn" class="btn btn-secondary btn-block">Ver Questões Marcadas</button>
+    </div>
+  </section>
+
+  <!-- ── QUIZ PAGE ────────────────────────────── -->
+  <section id="quiz-page" class="hidden">
+    <div class="question-meta">
+      <div class="q-breadcrumb">
+        <span id="q-breadcrumb-domain" class="q-breadcrumb-domain"></span>
+        <span class="q-breadcrumb-sep">·</span>
+        <span id="q-breadcrumb-task" class="q-breadcrumb-task"></span>
+      </div>
+      <button id="bookmark-btn" class="bookmark-btn">📌 Marcar</button>
+    </div>
+
+    <div class="question-card">
+      <div class="q-card-header">
+        <div id="q-number-badge" class="q-number-badge"></div>
+      </div>
+      <div id="question-domain" style="display:none"></div>
+      <h3 id="question-text"></h3>
+      <div id="options-container" class="options-container"></div>
+      <div id="explanation-card" class="explanation-card hidden"></div>
+    </div>
+
+    <div class="quiz-actions">
+      <button id="submit-btn" class="btn btn-primary">Verificar Resposta</button>
+      <button id="next-btn" class="btn btn-secondary hidden">Próxima Questão ➔</button>
+    </div>
+  </section>
+
+  <!-- ── BOOKMARKS PAGE ───────────────────────── -->
+  <section id="bookmarks-page" class="hidden">
+    <h2>📌 Questões Marcadas para Revisão</h2>
+    <div id="bookmarks-list"></div>
+    <div style="margin-top:1.5rem;display:flex;gap:0.75rem">
+      <button id="back-from-bookmarks-btn" class="btn btn-secondary">← Voltar</button>
+    </div>
+  </section>
+
+  <!-- ── RESULTS PAGE ─────────────────────────── -->
+  <section id="results-page" class="hidden">
+    <div class="results-hero">
+      <div class="results-donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 110 110">
+          <circle class="donut-bg"   cx="55" cy="55" r="46"/>
+          <circle class="donut-fill" id="donut-fill" cx="55" cy="55" r="46"
+                  stroke-dasharray="289" stroke-dashoffset="289"/>
+        </svg>
+        <div class="donut-center">
+          <span class="donut-pct" id="results-pct">0%</span>
+          <span class="donut-label">Score</span>
+        </div>
+      </div>
+      <div class="results-stats">
+        <div class="results-title" id="results-title">Simulado Concluído</div>
+        <div class="results-grid" id="results-grid"></div>
+      </div>
+    </div>
+
+    <div id="domain-stats" class="domain-stats"></div>
+
+    <div id="wrong-answers-list"></div>
+
+    <div class="results-actions">
+      <button id="restart-from-results-btn" class="btn btn-primary">← Novo Simulado</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── ABANDON MODAL ────────────────────────────── -->
+<div id="abandon-modal-overlay" class="abandon-modal-overlay" role="dialog" aria-modal="true">
+  <div class="abandon-modal">
+    <div class="abandon-modal-icon">⚠️</div>
+    <h3>Abandonar Simulado?</h3>
+    <p>Seu progresso atual será perdido e o simulado será encerrado. Tem certeza?</p>
+    <div class="abandon-modal-btns">
+      <button id="abandon-cancel-btn" class="btn btn-secondary">Continuar</button>
+      <button id="abandon-confirm-btn" class="btn btn-danger">Abandonar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+/* ══════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════ */
+const domainMap = {
           "1.1": {
             domain: "MÓDULO 1: FUNDAMENTOS DO ANSIBLE CORE",
             task: "Compreender a arquitetura, idempotência e execução via ad-hoc ou playbooks.",
@@ -847,8 +1259,7 @@
           }
         };
 
-        // Banco de Questões (Simulando cenários técnicos e de exames Red Hat)
-		const questionBank = [
+const questionBank = [
 // ==========================================
   // MÓDULO 1: FUNDAMENTOS DO ANSIBLE CORE (Novas)
   // ==========================================
@@ -2513,396 +2924,510 @@
   }
 ];
 
-        // Lógica Principal de UI e Estado (Idêntica ao template, mas isolada para Ansible)
-        const configPage = document.getElementById("config-page");
-        const quizPage = document.getElementById("quiz-page");
-        const resultsPage = document.getElementById("results-page");
-        const bookmarksPage = document.getElementById("bookmarks-page");
-        const slider = document.getElementById("questions-slider");
-        const sliderValue = document.getElementById("slider-value");
-        const startBtn = document.getElementById("start-btn");
-        const continueBtn = document.getElementById("continue-btn");
-        const viewBookmarksBtn = document.getElementById("view-bookmarks-btn");
-        const bookmarkCount = document.getElementById("bookmark-count");
-        const backFromBookmarksBtn = document.getElementById("back-from-bookmarks-btn");
-        const quizStats = document.getElementById("quiz-stats");
-        const questionProgressDisplay = document.getElementById("question-progress-display");
-        const timerDisplay = document.getElementById("timer-display");
-        const scoreDisplay = document.getElementById("score-display");
-        const globalResetBtn = document.getElementById("global-reset-btn");
-        const questionDomain = document.getElementById("question-domain");
-        const questionText = document.getElementById("question-text");
-        const optionsContainer = document.getElementById("options-container");
-        const explanationCard = document.getElementById("explanation-card");
-        const submitBtn = document.getElementById("submit-btn");
-        const nextBtn = document.getElementById("next-btn");
-        const bookmarkBtn = document.getElementById("bookmark-btn");
-        const bookmarksList = document.getElementById("bookmarks-list");
-        const resultsSummary = document.getElementById("results-summary");
-        const domainStatsDiv = document.getElementById("domain-stats");
-        const wrongAnswersList = document.getElementById("wrong-answers-list");
-        const restartFromResultsBtn = document.getElementById("restart-from-results-btn");
-        const themeToggle = document.getElementById("theme-toggle");
+/* ══════════════════════════════════════════════════
+   DOM REFS
+══════════════════════════════════════════════════ */
+const configPage   = document.getElementById("config-page");
+const quizPage     = document.getElementById("quiz-page");
+const resultsPage  = document.getElementById("results-page");
+const bookmarksPage= document.getElementById("bookmarks-page");
 
-        // Modal de abandono
-        const abandonOverlay   = document.getElementById("abandon-modal-overlay");
-        const abandonCancelBtn = document.getElementById("abandon-cancel-btn");
-        const abandonConfirmBtn= document.getElementById("abandon-confirm-btn");
+const slider        = document.getElementById("questions-slider");
+const sliderValue   = document.getElementById("slider-value");
+const startBtn      = document.getElementById("start-btn");
+const continueBtn   = document.getElementById("continue-btn");
+const viewBookmarksBtn = document.getElementById("view-bookmarks-btn");
+const bookmarkCount = document.getElementById("bookmark-count");
+const backFromBookmarksBtn = document.getElementById("back-from-bookmarks-btn");
 
-        let quizState = {};
-        let timerInterval;
-        let permanentBookmarks = [];
-        const STORAGE_KEY   = "ansibleQuizState";
-        const BOOKMARKS_KEY = "ansibleQuizBookmarks";
+const quizStatsEl   = document.getElementById("quiz-stats");
+const qProgressEl   = document.getElementById("question-progress-display");
+const timerDisplay  = document.getElementById("timer-display");
+const scoreDisplay  = document.getElementById("score-display");
+const progressFill  = document.getElementById("progress-fill");
+const globalResetBtn= document.getElementById("global-reset-btn");
 
-        // ── Dark Mode ──────────────────────────────────────────────
-        const savedTheme = localStorage.getItem("rh-theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-        updateThemeButton(savedTheme);
+const qBreadcrumbDomain = document.getElementById("q-breadcrumb-domain");
+const qBreadcrumbTask   = document.getElementById("q-breadcrumb-task");
+const qNumberBadge      = document.getElementById("q-number-badge");
+const questionDomain    = document.getElementById("question-domain");
+const questionText      = document.getElementById("question-text");
+const optionsContainer  = document.getElementById("options-container");
+const explanationCard   = document.getElementById("explanation-card");
+const submitBtn         = document.getElementById("submit-btn");
+const nextBtn           = document.getElementById("next-btn");
+const bookmarkBtn       = document.getElementById("bookmark-btn");
+const bookmarksList     = document.getElementById("bookmarks-list");
 
-        function updateThemeButton(theme) {
-          themeToggle.textContent = theme === "dark" ? "☀️ Claro" : "🌙 Escuro";
-        }
-        themeToggle.addEventListener("click", () => {
-          const current  = document.documentElement.getAttribute("data-theme");
-          const newTheme = current === "dark" ? "light" : "dark";
-          document.documentElement.setAttribute("data-theme", newTheme);
-          localStorage.setItem("rh-theme", newTheme);
-          updateThemeButton(newTheme);
-        });
+const resultsPct    = document.getElementById("results-pct");
+const resultsTitle  = document.getElementById("results-title");
+const resultsGrid   = document.getElementById("results-grid");
+const domainStatsDiv= document.getElementById("domain-stats");
+const wrongAnswersList = document.getElementById("wrong-answers-list");
+const donutFill     = document.getElementById("donut-fill");
+const restartBtn    = document.getElementById("restart-from-results-btn");
 
-        // ── Modo / Domínio ─────────────────────────────────────────
-        document.querySelectorAll(".mode-option").forEach((option) => {
-          option.addEventListener("click", () => {
-            document.querySelectorAll(".mode-option").forEach((o) => o.classList.remove("selected"));
-            option.classList.add("selected");
-            option.querySelector("input").checked = true;
-          });
-        });
+const themeToggle   = document.getElementById("theme-toggle");
+const themeIcon     = document.getElementById("theme-icon");
+const themeLabel    = document.getElementById("theme-label");
 
-        const allDomainsCheckbox = document.querySelector('input[value="all"]');
-        const domainCheckboxes   = document.querySelectorAll(".domain-check");
+const abandonOverlay    = document.getElementById("abandon-modal-overlay");
+const abandonCancelBtn  = document.getElementById("abandon-cancel-btn");
+const abandonConfirmBtn = document.getElementById("abandon-confirm-btn");
 
-        allDomainsCheckbox.addEventListener("change", (e) => {
-          domainCheckboxes.forEach((cb) => (cb.checked = e.target.checked));
-        });
-        domainCheckboxes.forEach((cb) => {
-          cb.addEventListener("change", () => {
-            allDomainsCheckbox.checked = Array.from(domainCheckboxes).every((c) => c.checked);
-          });
-        });
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let quizState = {};
+let timerInterval;
+let permanentBookmarks = [];
+const STORAGE_KEY   = "aapQuizState_v3";
+const BOOKMARKS_KEY = "aapQuizBookmarks_v3";
+const THEME_KEY     = "aapTheme_v3";
 
-        // ── Estado ────────────────────────────────────────────────
-        function saveState()  { localStorage.setItem(STORAGE_KEY, JSON.stringify(quizState)); }
-        function clearState() { localStorage.removeItem(STORAGE_KEY); quizState = {}; }
-        function loadState()  {
-          try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; }
-        }
+/* ══════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════ */
+const savedTheme = localStorage.getItem(THEME_KEY) || "light";
+applyTheme(savedTheme);
 
-        function checkSavedProgress() {
-          const bankSize = questionBank.length;
-          if (bankSize === 0) { configPage.innerHTML = "<h2>Erro: Banco vazio</h2>"; return; }
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeIcon.textContent  = t === "dark" ? "☀️" : "🌙";
+  themeLabel.textContent = t === "dark" ? "Claro" : "Escuro";
+  localStorage.setItem(THEME_KEY, t);
+}
+themeToggle.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  applyTheme(cur === "dark" ? "light" : "dark");
+});
 
-          // FIX: máximo 40 questões por simulado (ou o total do banco se menor)
-          const maxAllowed = Math.min(40, bankSize);
-          slider.max   = maxAllowed;
-          slider.value = Math.min(10, bankSize);
-          updateSliderValue();
+/* ══════════════════════════════════════════════════
+   STATE HELPERS
+══════════════════════════════════════════════════ */
+function saveState()  { localStorage.setItem(STORAGE_KEY, JSON.stringify(quizState)); }
+function clearState() { localStorage.removeItem(STORAGE_KEY); quizState = {}; }
+function loadState()  { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
 
-          const saved = loadState();
-          if (saved && saved.questions && saved.currentQuestionIndex < saved.questions.length) {
-            continueBtn.classList.remove("hidden");
-          } else {
-            continueBtn.classList.add("hidden");
-          }
-          loadBookmarks();
-        }
+/* ══════════════════════════════════════════════════
+   PAGE NAVIGATION
+══════════════════════════════════════════════════ */
+function showPage(id) {
+  [configPage, quizPage, resultsPage, bookmarksPage].forEach(p => {
+    p.classList.add("hidden");
+    p.style.animation = "";
+  });
+  const el = document.getElementById(id);
+  el.classList.remove("hidden");
+  el.style.animation = "none";
+  void el.offsetHeight;
+  el.style.animation = "";
 
-        // ── Navegação de Páginas ──────────────────────────────────
-        function showPage(pageId) {
-          [configPage, quizPage, resultsPage, bookmarksPage].forEach((p) => p.classList.add("hidden"));
-          document.getElementById(pageId).classList.remove("hidden");
-          if (pageId === "quiz-page") {
-            quizStats.classList.remove("hidden");
-            globalResetBtn.classList.remove("hidden");
-          } else {
-            quizStats.classList.add("hidden");
-            globalResetBtn.classList.add("hidden");
-          }
-        }
+  const isQuiz = id === "quiz-page";
+  quizStatsEl.classList.toggle("hidden", !isQuiz);
+  globalResetBtn.classList.toggle("hidden", !isQuiz);
+  progressFill.style.width = isQuiz ? getProgress() + "%" : "0%";
+}
 
-        // ── Modal de Abandono (FIX: sem confirm()) ────────────────
-        function openAbandonModal()  { abandonOverlay.classList.add("active"); }
-        function closeAbandonModal() { abandonOverlay.classList.remove("active"); }
+function getProgress() {
+  if (!quizState.questions) return 0;
+  return Math.round((quizState.currentQuestionIndex / quizState.questions.length) * 100);
+}
 
-        globalResetBtn.addEventListener("click", openAbandonModal);
-        abandonCancelBtn.addEventListener("click", closeAbandonModal);
-        abandonOverlay.addEventListener("click", (e) => {
-          if (e.target === abandonOverlay) closeAbandonModal();
-        });
-        abandonConfirmBtn.addEventListener("click", () => {
-          closeAbandonModal();
-          clearInterval(timerInterval);
-          clearState();
-          showPage("config-page");
-          checkSavedProgress();
-        });
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+function init() {
+  const bankSize = questionBank.length;
+  if (!bankSize) { configPage.innerHTML = "<p style=\'padding:2rem;color:var(--wrong-tx)\'>Erro: banco de questões vazio.</p>"; return; }
 
-        // ── Iniciar Quiz ──────────────────────────────────────────
-        function startQuiz(continuing = false) {
-          if (continuing) {
-            quizState = loadState();
-            if (!quizState || quizState.currentQuestionIndex >= quizState.questions.length) {
-              continuing = false; clearState();
-            }
-          }
-          if (!continuing) {
-            const numQuestions    = parseInt(slider.value, 10);
-            const mode            = document.querySelector('input[name="quiz-mode"]:checked').value;
-            const selectedDomains = Array.from(domainCheckboxes).filter((cb) => cb.checked).map((cb) => cb.value);
-            const filteredBank    = questionBank.filter((q) => selectedDomains.includes(q.dominio.split(".")[0]));
+  const max = Math.min(40, bankSize);
+  slider.max   = max;
+  slider.value = Math.min(10, bankSize);
+  updateSlider();
 
-            if (filteredBank.length === 0) { alert("Selecione pelo menos um módulo para iniciar."); return; }
+  const saved = loadState();
+  if (saved && saved.questions && saved.currentQuestionIndex < saved.questions.length) {
+    continueBtn.classList.remove("hidden");
+  } else {
+    continueBtn.classList.add("hidden");
+  }
+  loadBookmarks();
+}
 
-            const questions = [...filteredBank].sort(() => 0.5 - Math.random()).slice(0, numQuestions);
-            quizState = { questions, currentQuestionIndex: 0, score: 0, timer: 0, answers: [], mode, bookmarked: [] };
-          }
+/* ══════════════════════════════════════════════════
+   QUIZ START
+══════════════════════════════════════════════════ */
+function startQuiz(continuing = false) {
+  if (continuing) {
+    quizState = loadState();
+    if (!quizState || quizState.currentQuestionIndex >= quizState.questions.length) {
+      continuing = false; clearState();
+    }
+  }
+  if (!continuing) {
+    const n    = parseInt(slider.value, 10);
+    const mode = document.querySelector("input[name=\'quiz-mode\']:checked").value;
+    const doms = Array.from(document.querySelectorAll(".domain-check")).filter(c => c.checked).map(c => c.value);
+    const bank = questionBank.filter(q => doms.includes(q.dominio.split(".")[0]));
+    if (!bank.length) { alert("Selecione pelo menos um módulo."); return; }
+    const qs   = [...bank].sort(() => 0.5 - Math.random()).slice(0, n);
+    quizState  = { questions: qs, currentQuestionIndex: 0, score: 0, timer: 0, answers: [], mode };
+  }
+  showPage("quiz-page");
+  loadQuestion(quizState.currentQuestionIndex);
+  startTimer();
+  updateScoreDisplay();
+  saveState();
+}
 
-          showPage("quiz-page");
-          loadQuestion(quizState.currentQuestionIndex);
-          startTimer();
-          updateScoreDisplay();
-          saveState();
-        }
+/* ══════════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════════ */
+function startTimer() {
+  clearInterval(timerInterval);
+  let s = quizState.timer || 0;
+  timerDisplay.textContent = fmt(s);
+  timerInterval = setInterval(() => {
+    if (document.hidden) return;
+    s++; quizState.timer = s;
+    timerDisplay.textContent = fmt(s);
+    if (s % 10 === 0) saveState();
+  }, 1000);
+}
+const fmt = t => `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
 
-        // ── Timer ─────────────────────────────────────────────────
-        function startTimer() {
-          clearInterval(timerInterval);
-          let seconds = quizState.timer || 0;
-          timerDisplay.textContent = `Tempo: ${formatTime(seconds)}`;
-          timerInterval = setInterval(() => {
-            if (document.hidden) return;
-            seconds++; quizState.timer = seconds;
-            timerDisplay.textContent = `Tempo: ${formatTime(seconds)}`;
-            if (seconds % 10 === 0) saveState();
-          }, 1000);
-        }
-        function formatTime(totalSeconds) {
-          const mins = Math.floor(totalSeconds / 60);
-          const secs = totalSeconds % 60;
-          return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-        }
+/* ══════════════════════════════════════════════════
+   LOAD QUESTION
+══════════════════════════════════════════════════ */
+function loadQuestion(idx) {
+  const q    = quizState.questions[idx];
+  const di   = domainMap[q.dominio];
+  const tot  = quizState.questions.length;
+  const isEx = quizState.mode === "exam";
 
-        // ── Carregar Questão ──────────────────────────────────────
-        function loadQuestion(index) {
-          questionProgressDisplay.textContent = `Questão: ${index + 1}/${quizState.questions.length}`;
-          const question   = quizState.questions[index];
-          const domainInfo = domainMap[question.dominio];
-          const isExam     = quizState.mode === "exam";
+  // Breadcrumb
+  qBreadcrumbDomain.textContent = di.domain;
+  qBreadcrumbTask.textContent   = di.task;
+  if (isEx) {
+    qBreadcrumbTask.innerHTML += ' <span class="exam-mode-badge">MODO EXAME</span>';
+  }
 
-          // Badge de modo exame no domínio
-          questionDomain.innerHTML = `<strong>${domainInfo.domain}</strong>${domainInfo.task}${isExam ? '<span class="exam-mode-badge">MODO EXAME</span>' : ''}`;
-          questionText.textContent = question.pergunta;
-          optionsContainer.innerHTML = "";
-          explanationCard.classList.add("hidden");
+  // Number badge
+  qNumberBadge.textContent = `Questão ${idx + 1} de ${tot}`;
 
-          const isBookmarked = isQuestionBookmarked(question);
-          bookmarkBtn.classList.toggle("bookmarked", isBookmarked);
-          bookmarkBtn.textContent = isBookmarked ? "📌 Marcado" : "📌 Marcar";
+  // Question text
+  questionText.textContent = q.pergunta;
 
-          const inputType = question.tipo === "multiple" ? "radio" : "checkbox";
-          question.opcoes.forEach((opt, i) => {
-            const val   = question.tipo === "multiple" ? opt.charAt(0) : i + 1;
-            const div   = document.createElement("div"); div.className = "option";
-            const input = document.createElement("input");
-            input.type  = inputType; input.id = `opt-${i}`; input.name = "option"; input.value = val;
-            const label = document.createElement("label");
-            label.htmlFor = `opt-${i}`; label.textContent = opt;
-            div.appendChild(input); div.appendChild(label);
-            div.addEventListener("click", (e) => { if (e.target.tagName !== "INPUT" && !input.disabled) input.click(); });
-            optionsContainer.appendChild(div);
-          });
+  // Clear options & explanation
+  optionsContainer.innerHTML = "";
+  explanationCard.classList.add("hidden");
 
-          // FIX modo exame: botão com texto correto, sem nextBtn intermediário
-          submitBtn.textContent = isExam ? "Confirmar e Avançar ➔" : "Verificar Resposta";
-          submitBtn.classList.remove("hidden");
-          nextBtn.classList.add("hidden");
-          submitBtn.disabled = false;
-        }
+  // Bookmark state
+  const bm = isBookmarked(q);
+  bookmarkBtn.classList.toggle("bookmarked", bm);
+  bookmarkBtn.textContent = bm ? "📌 Marcado" : "📌 Marcar";
 
-        // ── Submeter Resposta ─────────────────────────────────────
-        function handleSubmitAnswer() {
-          const question = quizState.questions[quizState.currentQuestionIndex];
-          const isExam   = quizState.mode === "exam";
-          let selected; let isCorrect = false;
+  // Build options with letter badges
+  const letters = ["A","B","C","D","E","F"];
+  const inputT  = q.tipo === "multiple" ? "radio" : "checkbox";
 
-          if (question.tipo === "multiple") {
-            const radio = optionsContainer.querySelector('input[name="option"]:checked');
-            if (!radio) { alert("Selecione uma opção antes de continuar."); return; }
-            selected  = radio.value;
-            isCorrect = selected === question.correta;
-          } else {
-            const checks = optionsContainer.querySelectorAll('input[name="option"]:checked');
-            if (checks.length === 0) { alert("Selecione ao menos uma opção antes de continuar."); return; }
-            selected  = Array.from(checks).map((cb) => parseInt(cb.value));
-            isCorrect = question.correta.length === selected.length && question.correta.every(v => selected.includes(v));
-          }
+  q.opcoes.forEach((opt, i) => {
+    const val = q.tipo === "multiple" ? opt.charAt(0) : i + 1;
+    const div = document.createElement("div");
+    div.className = "option";
 
-          if (isCorrect) quizState.score++;
-          quizState.answers.push({
-            question: question.pergunta, questionDomain: question.dominio,
-            answerGiven: selected, correctAnswer: question.correta,
-            explanation: question.explicacao, isCorrect
-          });
+    const badge = document.createElement("span");
+    badge.className = "opt-letter";
+    badge.textContent = q.tipo === "multiple" ? opt.charAt(0) : letters[i];
 
-          optionsContainer.querySelectorAll("input").forEach((inp) => (inp.disabled = true));
+    const inp = document.createElement("input");
+    inp.type = inputT; inp.id = `opt-${i}`; inp.name = "option"; inp.value = val;
 
-          if (isExam) {
-            // FIX modo exame: sem feedback, sem nextBtn — avança direto
-            saveState();
-            quizState.currentQuestionIndex++;
-            if (quizState.currentQuestionIndex < quizState.questions.length) {
-              loadQuestion(quizState.currentQuestionIndex);
-              updateScoreDisplay(); // score oculto no header em exam mode mas atualizado internamente
-            } else {
-              endQuiz();
-            }
-          } else {
-            // Modo Prática: exibe feedback e botão "Próxima"
-            highlightAnswers(question, selected);
-            explanationCard.innerHTML = `<h3>${isCorrect ? "✅ Correto!" : "❌ Incorreto"}</h3><p>${question.explicacao}</p>`;
-            explanationCard.classList.remove("hidden");
-            explanationCard.className = `explanation-card ${isCorrect ? "correct" : "incorrect"}`;
-            submitBtn.classList.add("hidden");
-            nextBtn.classList.remove("hidden");
-            updateScoreDisplay();
-            saveState();
-          }
-        }
+    const lbl = document.createElement("label");
+    lbl.htmlFor = `opt-${i}`;
+    lbl.textContent = q.tipo === "multiple" ? opt.slice(3) : opt.slice(3); // strip "A. "
+    lbl.textContent = opt; // show full text
 
-        // FIX: em modo exame, oculta o placar em tempo real para não revelar acertos
-        function updateScoreDisplay() {
-          if (quizState.mode === "exam") {
-            scoreDisplay.textContent = `Questão ${(quizState.answers.length) + 1} de ${quizState.questions.length}`;
-          } else {
-            scoreDisplay.textContent = `Acertos: ${quizState.score}/${quizState.answers.length}`;
-          }
-        }
+    div.appendChild(badge);
+    div.appendChild(inp);
+    div.appendChild(lbl);
+    div.addEventListener("click", e => { if (e.target.tagName !== "INPUT" && !inp.disabled) inp.click(); });
+    div.addEventListener("click", e => { if (e.target.tagName !== "INPUT" && !inp.disabled) { div.classList.toggle("selected", !inp.checked); }});
 
-        function highlightAnswers(question, selected) {
-          optionsContainer.querySelectorAll(".option").forEach((opt) => {
-            const val        = question.tipo === "multiple" ? opt.querySelector("input").value : parseInt(opt.querySelector("input").value);
-            const isAnsCorrect  = question.tipo === "multiple" ? val === question.correta : question.correta.includes(val);
-            const isAnsSelected = question.tipo === "multiple" ? val === selected : selected.includes(val);
-            if (isAnsCorrect)               opt.classList.add("correct");
-            if (isAnsSelected && !isAnsCorrect) opt.classList.add("incorrect", "selected");
-            if (isAnsSelected && isAnsCorrect)  opt.classList.add("correct", "selected");
-          });
-        }
+    inp.addEventListener("change", () => {
+      if (inputT === "radio") {
+        optionsContainer.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+      }
+      div.classList.toggle("selected", inp.checked);
+    });
 
-        function handleNextQuestion() {
-          quizState.currentQuestionIndex++;
-          if (quizState.currentQuestionIndex < quizState.questions.length) loadQuestion(quizState.currentQuestionIndex);
-          else endQuiz();
-        }
+    optionsContainer.appendChild(div);
+  });
 
-        // ── Encerrar Quiz ─────────────────────────────────────────
-        function endQuiz() {
-          clearInterval(timerInterval);
-          showPage("results-page");
+  // Buttons
+  submitBtn.textContent = isEx ? "Confirmar e Avançar ➔" : "Verificar Resposta";
+  submitBtn.classList.remove("hidden");
+  nextBtn.classList.add("hidden");
+  submitBtn.disabled = false;
 
-          const total = quizState.questions.length;
-          const score = quizState.score;
-          const pct   = ((score / total) * 100).toFixed(0);
-          const modeLabel = quizState.mode === "exam" ? " (Modo Exame)" : " (Modo Prática)";
+  // Update progress bar
+  progressFill.style.width = Math.round((idx / tot) * 100) + "%";
 
-          resultsSummary.innerHTML = `
-            <p class="result-score">Nota Final: ${pct}%${pct >= 70 ? " 🎉" : " 📚"}</p>
-            <p><strong>Acertos:</strong> ${score} de ${total}${modeLabel}</p>
-            <p><strong>Tempo Total:</strong> ${formatTime(quizState.timer)}</p>
-          `;
+  // Update header progress
+  qProgressEl.textContent = `${idx + 1}/${tot}`;
+}
 
-          // FIX: Estatísticas por domínio (antes vazia — agora populada)
-          const domainResults = {};
-          quizState.answers.forEach((a) => {
-            if (!domainResults[a.questionDomain]) domainResults[a.questionDomain] = { total: 0, correct: 0 };
-            domainResults[a.questionDomain].total++;
-            if (a.isCorrect) domainResults[a.questionDomain].correct++;
-          });
+/* ══════════════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════════════ */
+function handleSubmit() {
+  const q    = quizState.questions[quizState.currentQuestionIndex];
+  const isEx = quizState.mode === "exam";
+  let selected, isCorrect = false;
 
-          domainStatsDiv.innerHTML = "<h3 style='margin-bottom:1rem;'>📊 Desempenho por Módulo</h3>";
-          Object.entries(domainResults).sort().forEach(([domain, res]) => {
-            const domPct = ((res.correct / res.total) * 100).toFixed(0);
-            const color  = domPct >= 70 ? "var(--correct-border)" : domPct >= 50 ? "var(--warning-border)" : "var(--incorrect-border)";
-            domainStatsDiv.innerHTML += `
-              <div class="domain-stat-item">
-                <span style="font-size:0.85rem;flex:2">${domainMap[domain]?.domain || domain}</span>
-                <div class="stat-bar"><div class="stat-bar-fill" style="width:${domPct}%;background:${color}"></div></div>
-                <span style="font-weight:700;min-width:60px;text-align:right;color:${color}">${res.correct}/${res.total} (${domPct}%)</span>
-              </div>`;
-          });
+  if (q.tipo === "multiple") {
+    const r = optionsContainer.querySelector("input:checked");
+    if (!r) { alert("Selecione uma opção."); return; }
+    selected  = r.value;
+    isCorrect = selected === q.correta;
+  } else {
+    const cs = [...optionsContainer.querySelectorAll("input:checked")];
+    if (!cs.length) { alert("Selecione ao menos uma opção."); return; }
+    selected  = cs.map(c => parseInt(c.value));
+    isCorrect = q.correta.length === selected.length && q.correta.every(v => selected.includes(v));
+  }
 
-          const wrong = quizState.answers.filter((a) => !a.isCorrect);
-          wrongAnswersList.innerHTML = "<h3>📝 Revisão Técnica das Respostas Erradas</h3>";
-          if (wrong.length === 0) {
-            wrongAnswersList.innerHTML += "<p style='margin-top:1rem'>🎉 Você gabaritou! O Red Hat cert está próximo!</p>";
-          } else {
-            wrong.forEach((item) => {
-              wrongAnswersList.innerHTML += `
-                <div class="wrong-answer-item">
-                  <h4>${domainMap[item.questionDomain]?.domain || item.questionDomain}</h4>
-                  <p style="padding:0.75rem 1rem 0"><strong>Questão:</strong> ${item.question}</p>
-                  <div class="explanation"><strong>Explicação do Instrutor:</strong><br>${item.explanation}</div>
-                </div>`;
-            });
-          }
-          clearState(); checkSavedProgress();
-        }
+  if (isCorrect) quizState.score++;
+  quizState.answers.push({ question: q.pergunta, questionDomain: q.dominio, answerGiven: selected, correctAnswer: q.correta, explanation: q.explicacao, isCorrect });
 
-        // ── Bookmarks ─────────────────────────────────────────────
-        function loadBookmarks() {
-          try { permanentBookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY)) || []; } catch(e) { permanentBookmarks = []; }
-          bookmarkCount.textContent = permanentBookmarks.length;
-        }
-        function saveBookmarks() { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(permanentBookmarks)); loadBookmarks(); }
-        function isQuestionBookmarked(q) { return permanentBookmarks.some(b => b.pergunta === q.pergunta); }
+  optionsContainer.querySelectorAll("input").forEach(i => i.disabled = true);
 
-        bookmarkBtn.addEventListener("click", () => {
-          const q = quizState.questions[quizState.currentQuestionIndex];
-          if (isQuestionBookmarked(q)) permanentBookmarks = permanentBookmarks.filter(b => b.pergunta !== q.pergunta);
-          else permanentBookmarks.push(q);
-          saveBookmarks();
-          bookmarkBtn.classList.toggle("bookmarked", isQuestionBookmarked(q));
-          bookmarkBtn.textContent = isQuestionBookmarked(q) ? "📌 Marcado" : "📌 Marcar";
-        });
+  if (isEx) {
+    saveState();
+    quizState.currentQuestionIndex++;
+    if (quizState.currentQuestionIndex < quizState.questions.length) {
+      updateScoreDisplay();
+      loadQuestion(quizState.currentQuestionIndex);
+    } else { endQuiz(); }
+  } else {
+    highlight(q, selected);
+    explanationCard.innerHTML = `<h3>${isCorrect ? "✅ Correto!" : "❌ Incorreto"}</h3><p>${q.explicacao}</p>`;
+    explanationCard.classList.remove("hidden");
+    explanationCard.className = `explanation-card ${isCorrect ? "correct" : "incorrect"}`;
+    submitBtn.classList.add("hidden");
+    nextBtn.classList.remove("hidden");
+    updateScoreDisplay();
+    saveState();
+  }
+}
 
-        viewBookmarksBtn.addEventListener("click", () => {
-          showPage("bookmarks-page");
-          bookmarksList.innerHTML = permanentBookmarks.length === 0 ? "<p>Nenhuma questão marcada.</p>" : "";
-          permanentBookmarks.forEach((q, i) => {
-            bookmarksList.innerHTML += `
-              <div class="wrong-answer-item">
-                <h4>${domainMap[q.dominio]?.domain || q.dominio}</h4>
-                <p style="padding:0.75rem 1rem 0"><strong>Pergunta:</strong> ${q.pergunta}</p>
-                <div class="explanation">${q.explicacao}</div>
-                <button class="btn btn-secondary btn-sm" onclick="removeBookmark(${i})" style="margin:10px">Remover</button>
-              </div>`;
-          });
-        });
-        window.removeBookmark = function(i) { permanentBookmarks.splice(i, 1); saveBookmarks(); viewBookmarksBtn.click(); };
+function highlight(q, sel) {
+  optionsContainer.querySelectorAll(".option").forEach((opt, i) => {
+    const inp  = opt.querySelector("input");
+    const val  = q.tipo === "multiple" ? inp.value : parseInt(inp.value);
+    const isCo = q.tipo === "multiple" ? val === q.correta : q.correta.includes(val);
+    const isSe = q.tipo === "multiple" ? val === sel : sel.includes(val);
+    opt.classList.remove("selected");
+    if (isCo) opt.classList.add("correct");
+    if (isSe && !isCo) opt.classList.add("incorrect");
+  });
+}
 
-        // ── Event Listeners ───────────────────────────────────────
-        slider.addEventListener("input", updateSliderValue);
-        function updateSliderValue() { sliderValue.textContent = slider.value; }
-        startBtn.addEventListener("click", () => startQuiz(false));
-        continueBtn.addEventListener("click", () => startQuiz(true));
-        backFromBookmarksBtn.addEventListener("click", () => showPage("config-page"));
-        submitBtn.addEventListener("click", handleSubmitAnswer);
-        nextBtn.addEventListener("click", handleNextQuestion);
-        restartFromResultsBtn.addEventListener("click", () => showPage("config-page"));
+function handleNext() {
+  quizState.currentQuestionIndex++;
+  if (quizState.currentQuestionIndex < quizState.questions.length) loadQuestion(quizState.currentQuestionIndex);
+  else endQuiz();
+}
 
-        checkSavedProgress();
-      });
-    </script>
-  </body>
+/* ══════════════════════════════════════════════════
+   SCORE DISPLAY
+══════════════════════════════════════════════════ */
+function updateScoreDisplay() {
+  if (quizState.mode === "exam") {
+    const done = quizState.answers.length;
+    const tot  = quizState.questions.length;
+    scoreDisplay.textContent = `${done + 1}/${tot}`;
+  } else {
+    scoreDisplay.textContent = `${quizState.score}/${quizState.answers.length}`;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   END QUIZ
+══════════════════════════════════════════════════ */
+function endQuiz() {
+  clearInterval(timerInterval);
+  showPage("results-page");
+  progressFill.style.width = "100%";
+
+  const total = quizState.questions.length;
+  const score = quizState.score;
+  const pct   = Math.round((score / total) * 100);
+
+  // Donut animation
+  const circ = 289;
+  const offset = circ - (circ * pct / 100);
+  setTimeout(() => { donutFill.style.strokeDashoffset = offset; }, 100);
+
+  resultsPct.textContent = pct + "%";
+  resultsTitle.textContent = pct >= 70 ? "Excelente resultado! 🎉" : pct >= 50 ? "Bom começo — continue! 📚" : "Precisa de mais prática 💪";
+
+  const modeLabel = quizState.mode === "exam" ? "Modo Exame" : "Modo Prática";
+  resultsGrid.innerHTML = `
+    <div class="result-stat">
+      <span class="result-stat-val ${pct >= 70 ? "good" : pct < 50 ? "bad" : ""}">${pct}%</span>
+      <span class="result-stat-label">Nota Final</span>
+    </div>
+    <div class="result-stat">
+      <span class="result-stat-val good">${score}</span>
+      <span class="result-stat-label">Corretas</span>
+    </div>
+    <div class="result-stat">
+      <span class="result-stat-val ${total - score > 0 ? "bad" : ""}">${total - score}</span>
+      <span class="result-stat-label">Erradas</span>
+    </div>
+    <div class="result-stat">
+      <span class="result-stat-val">${total}</span>
+      <span class="result-stat-label">Total</span>
+    </div>
+    <div class="result-stat">
+      <span class="result-stat-val">${fmt(quizState.timer)}</span>
+      <span class="result-stat-label">Tempo</span>
+    </div>
+    <div class="result-stat">
+      <span class="result-stat-val" style="font-size:0.85rem">${modeLabel}</span>
+      <span class="result-stat-label">Modo</span>
+    </div>
+  `;
+
+  // Domain breakdown
+  const dr = {};
+  quizState.answers.forEach(a => {
+    if (!dr[a.questionDomain]) dr[a.questionDomain] = { t: 0, c: 0 };
+    dr[a.questionDomain].t++;
+    if (a.isCorrect) dr[a.questionDomain].c++;
+  });
+  domainStatsDiv.innerHTML = "<h3>Desempenho por Módulo</h3>";
+  Object.entries(dr).sort().forEach(([dom, r]) => {
+    const p   = Math.round((r.c / r.t) * 100);
+    const col = p >= 70 ? "var(--correct-bd)" : p >= 50 ? "var(--warn-bd)" : "var(--wrong-bd)";
+    domainStatsDiv.innerHTML += `
+      <div class="domain-stat-item">
+        <span style="font-size:0.78rem">${domainMap[dom]?.domain || dom}</span>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:${p}%;background:${col}"></div></div>
+        <span style="font-family:var(--font-mono);font-size:0.8rem;font-weight:600;color:${col};text-align:right">${r.c}/${r.t} (${p}%)</span>
+      </div>`;
+  });
+
+  // Wrong answers
+  const wrong = quizState.answers.filter(a => !a.isCorrect);
+  wrongAnswersList.innerHTML = wrong.length
+    ? "<h3>📝 Revisão Técnica</h3>"
+    : "<p style=\'padding:1.5rem;text-align:center;color:var(--correct-bd);font-family:var(--font-serif);font-size:1.2rem\'>🎉 Você gabaritou! O Red Hat cert está próximo!</p>";
+  wrong.forEach(item => {
+    wrongAnswersList.innerHTML += `
+      <div class="wrong-answer-item">
+        <h4>${domainMap[item.questionDomain]?.domain || item.questionDomain}</h4>
+        <p><strong>Questão:</strong> ${item.question}</p>
+        <div class="explanation"><strong>Explicação:</strong><br>${item.explanation}</div>
+      </div>`;
+  });
+
+  clearState();
+  init();
+}
+
+/* ══════════════════════════════════════════════════
+   BOOKMARKS
+══════════════════════════════════════════════════ */
+function loadBookmarks() {
+  try { permanentBookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY)) || []; } catch { permanentBookmarks = []; }
+  bookmarkCount.textContent = permanentBookmarks.length;
+}
+function saveBookmarks() { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(permanentBookmarks)); loadBookmarks(); }
+function isBookmarked(q)  { return permanentBookmarks.some(b => b.pergunta === q.pergunta); }
+
+bookmarkBtn.addEventListener("click", () => {
+  const q = quizState.questions[quizState.currentQuestionIndex];
+  if (isBookmarked(q)) permanentBookmarks = permanentBookmarks.filter(b => b.pergunta !== q.pergunta);
+  else permanentBookmarks.push(q);
+  saveBookmarks();
+  bookmarkBtn.classList.toggle("bookmarked", isBookmarked(q));
+  bookmarkBtn.textContent = isBookmarked(q) ? "📌 Marcado" : "📌 Marcar";
+});
+
+viewBookmarksBtn.addEventListener("click", () => {
+  showPage("bookmarks-page");
+  if (!permanentBookmarks.length) {
+    bookmarksList.innerHTML = "<p style=\'color:var(--ink4);font-family:var(--font-serif);font-size:1.1rem;padding:1rem 0\'>Nenhuma questão marcada ainda.</p>";
+    return;
+  }
+  bookmarksList.innerHTML = "";
+  permanentBookmarks.forEach((q, i) => {
+    bookmarksList.innerHTML += `
+      <div class="wrong-answer-item">
+        <h4>${domainMap[q.dominio]?.domain || q.dominio}</h4>
+        <p><strong>Pergunta:</strong> ${q.pergunta}</p>
+        <div class="explanation">${q.explicacao}</div>
+        <div style="padding:0.75rem 1.25rem">
+          <button class="btn btn-sm btn-danger" onclick="removeBookmark(${i})">Remover marcação</button>
+        </div>
+      </div>`;
+  });
+});
+window.removeBookmark = i => { permanentBookmarks.splice(i, 1); saveBookmarks(); viewBookmarksBtn.click(); };
+
+/* ══════════════════════════════════════════════════
+   ABANDON MODAL
+══════════════════════════════════════════════════ */
+function openAbandon()  { abandonOverlay.classList.add("active"); }
+function closeAbandon() { abandonOverlay.classList.remove("active"); }
+
+globalResetBtn.addEventListener("click", openAbandon);
+abandonCancelBtn.addEventListener("click", closeAbandon);
+abandonOverlay.addEventListener("click", e => { if (e.target === abandonOverlay) closeAbandon(); });
+abandonConfirmBtn.addEventListener("click", () => {
+  closeAbandon();
+  clearInterval(timerInterval);
+  clearState();
+  showPage("config-page");
+  init();
+});
+
+/* ══════════════════════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════════════════════ */
+function updateSlider() { sliderValue.textContent = slider.value; }
+slider.addEventListener("input", updateSlider);
+startBtn.addEventListener("click", () => startQuiz(false));
+continueBtn.addEventListener("click", () => startQuiz(true));
+backFromBookmarksBtn.addEventListener("click", () => showPage("config-page"));
+submitBtn.addEventListener("click", handleSubmit);
+nextBtn.addEventListener("click", handleNext);
+restartBtn.addEventListener("click", () => showPage("config-page"));
+
+document.querySelectorAll(".mode-option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll(".mode-option").forEach(o => o.classList.remove("selected"));
+    opt.classList.add("selected");
+    opt.querySelector("input").checked = true;
+  });
+});
+
+const allCb = document.querySelector("input[value=\'all\']");
+const domCbs = document.querySelectorAll(".domain-check");
+allCb.addEventListener("change", e => domCbs.forEach(c => c.checked = e.target.checked));
+domCbs.forEach(c => c.addEventListener("change", () => {
+  allCb.checked = [...domCbs].every(x => x.checked);
+}));
+
+/* ══════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════ */
+init();
+
+}); // DOMContentLoaded
+</script>
+</body>
 </html>
