@@ -1,0 +1,2908 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador - Ansible & Red Hat AAP</title>
+
+    <style>
+      :root {
+        /* Tema Red Hat */
+        --rh-red: #EE0000;
+        --rh-red-dark: #CC0000;
+        --rh-black: #151515;
+        --rh-grey-dark: #333333;
+        --rh-grey-medium: #d2d2d2;
+        --rh-grey-light: #f3f4f5;
+        --text-color: #151515;
+        --white: #ffffff;
+        
+        /* Feedback Colors */
+        --correct-bg: #e6f7ec;
+        --correct-border: #3e8a2a;
+        --incorrect-bg: #fdecea;
+        --incorrect-border: #c9190b;
+        --warning-bg: #fdf7e7;
+        --warning-border: #f0ab00;
+        
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --border-radius: 6px;
+      }
+
+      [data-theme="dark"] {
+        --rh-grey-light: #1f1f1f;
+        --rh-grey-medium: #3b3b3b;
+        --rh-grey-dark: #8a8a8a;
+        --text-color: #e8e8e8;
+        --white: #262626;
+        --rh-black: #101010;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --correct-bg: #1a3a1a;
+        --correct-border: #52c41a;
+        --incorrect-bg: #3a1a1a;
+        --incorrect-border: #ff4d4f;
+        --warning-bg: #3a2a1a;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        font-family: 'Red Hat Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--rh-grey-light);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        line-height: 1.6;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .app-header {
+        background-color: var(--rh-black);
+        color: var(--white);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+        border-bottom: 3px solid var(--rh-red);
+      }
+
+      .app-header h1 {
+        font-size: 1.5rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .header-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .theme-toggle {
+        background: none;
+        border: 1px solid var(--rh-grey-medium);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+      }
+
+      .theme-toggle:hover {
+        background: var(--rh-grey-dark);
+        border-color: var(--white);
+      }
+
+      .quiz-stats {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        flex-wrap: wrap;
+      }
+
+      .quiz-stats span {
+        background-color: var(--rh-grey-dark);
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+      }
+
+      main {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        overflow-y: auto;
+      }
+
+      .page-section {
+        width: 100%;
+        max-width: 900px;
+        background: var(--white);
+        padding: 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .btn {
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-primary {
+        background-color: var(--rh-red);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--rh-red-dark);
+      }
+
+      .btn-secondary {
+        background-color: var(--rh-grey-medium);
+        color: var(--rh-black);
+      }
+
+      .btn-secondary:hover {
+        background-color: #b0b0b0;
+      }
+
+      .btn-danger {
+        background-color: var(--rh-black);
+        color: #fff;
+        border: 1px solid var(--rh-red);
+      }
+      .btn-danger:hover {
+        background-color: var(--rh-red);
+      }
+
+      .btn[disabled] {
+        background-color: var(--rh-grey-medium);
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      /* Config Page */
+      #config-page h2 {
+        color: var(--rh-black);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        border-bottom: 2px solid var(--rh-red);
+        padding-bottom: 10px;
+      }
+
+      [data-theme="dark"] #config-page h2 {
+        color: var(--white);
+      }
+
+      .config-grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .config-item {
+        border: 1px solid var(--rh-grey-medium);
+        padding: 1.25rem;
+        border-radius: var(--border-radius);
+        background: var(--rh-grey-light);
+      }
+
+      .config-item label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+      }
+
+      .slider-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      #questions-slider {
+        flex: 1;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        background: var(--rh-grey-medium);
+        border-radius: 5px;
+        outline: none;
+      }
+      #questions-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: var(--rh-red);
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
+      #slider-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--rh-red);
+        min-width: 30px;
+        text-align: right;
+      }
+
+      .domain-filter {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .domain-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--white);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: background 0.2s;
+        border: 1px solid var(--rh-grey-medium);
+      }
+
+      .domain-checkbox:hover {
+        background: var(--rh-grey-light);
+        border-color: var(--rh-red);
+      }
+
+      .domain-checkbox input {
+        cursor: pointer;
+        margin-top: 0.25rem;
+        flex-shrink: 0;
+        accent-color: var(--rh-red);
+      }
+
+      .domain-checkbox span {
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .domain-checkbox strong {
+        display: block;
+        color: var(--rh-red-dark);
+        margin-bottom: 0.25rem;
+      }
+
+      [data-theme="dark"] .domain-checkbox strong {
+        color: var(--rh-red);
+      }
+
+      .mode-selector {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .mode-option {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid var(--rh-grey-medium);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+      }
+
+      .mode-option:hover {
+        border-color: var(--rh-red);
+      }
+
+      .mode-option.selected {
+        border-color: var(--rh-red);
+        background: var(--warning-bg);
+      }
+
+      .mode-option input {
+        display: none;
+      }
+
+      .mode-option strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+      }
+
+      .mode-option small {
+        color: var(--rh-grey-dark);
+      }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* Quiz Page */
+      .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .bookmark-btn {
+        background: none;
+        border: 2px solid var(--rh-grey-medium);
+        color: var(--text-color);
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+        font-weight: bold;
+      }
+
+      .bookmark-btn:hover,
+      .bookmark-btn.bookmarked {
+        border-color: var(--warning-border);
+        background-color: var(--warning-bg);
+        color: var(--rh-black);
+      }
+
+      .question-card {
+        margin-bottom: 1.5rem;
+      }
+
+      #question-domain {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        background: var(--rh-grey-light);
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        border-left: 4px solid var(--rh-red);
+      }
+
+      #question-domain strong {
+        color: var(--rh-red-dark);
+        font-size: 1rem;
+        display: block;
+      }
+      
+      [data-theme="dark"] #question-domain strong {
+        color: var(--rh-red);
+      }
+
+      #question-text {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        white-space: pre-wrap;
+        color: var(--text-color);
+      }
+
+      .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .option {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        border: 2px solid var(--rh-grey-medium);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+        background: var(--white);
+      }
+
+      .option:hover {
+        border-color: var(--rh-red);
+      }
+
+      .option input[type="radio"],
+      .option input[type="checkbox"] {
+        margin-top: 0.35rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        width: 1.2em;
+        height: 1.2em;
+        cursor: pointer;
+        accent-color: var(--rh-red);
+      }
+
+      .option label {
+        cursor: pointer;
+        width: 100%;
+        font-family: monospace;
+        font-size: 0.95rem;
+      }
+
+      .option.correct {
+        background-color: var(--correct-bg);
+        border-color: var(--correct-border);
+        font-weight: bold;
+      }
+
+      .option.incorrect {
+        background-color: var(--incorrect-bg);
+        border-color: var(--incorrect-border);
+      }
+
+      .option.correct.selected {
+        box-shadow: 0 0 8px var(--correct-border);
+      }
+
+      .option.incorrect.selected {
+        font-weight: bold;
+        box-shadow: 0 0 8px var(--incorrect-border);
+      }
+
+      .explanation-card {
+        margin-top: 1.5rem;
+        padding: 1.25rem 1.5rem;
+        border-radius: var(--border-radius);
+        border: 2px solid;
+        white-space: pre-wrap;
+        line-height: 1.7;
+      }
+
+      .explanation-card h3 {
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+        font-size: 1.2rem;
+      }
+
+      .explanation-card.correct {
+        background-color: var(--correct-bg);
+        border-color: var(--correct-border);
+      }
+
+      .explanation-card.incorrect {
+        background-color: var(--incorrect-bg);
+        border-color: var(--incorrect-border);
+      }
+
+      .quiz-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+
+      /* Results Page */
+      #results-page h2 {
+        color: var(--text-color);
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--rh-red);
+        padding-bottom: 10px;
+      }
+
+      #results-summary {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        background: var(--rh-grey-light);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        border-left: 4px solid var(--rh-red);
+      }
+
+      #results-summary p {
+        margin-bottom: 0.5rem;
+      }
+
+      #results-summary .result-score {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--rh-red-dark);
+      }
+
+      [data-theme="dark"] #results-summary .result-score {
+        color: var(--rh-red);
+      }
+
+      .domain-stats {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: var(--rh-grey-light);
+        border-radius: var(--border-radius);
+      }
+
+      .domain-stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: var(--white);
+        border-radius: 4px;
+        border-left: 4px solid var(--rh-red);
+      }
+
+      .stat-bar {
+        flex: 1;
+        height: 8px;
+        background: var(--rh-grey-medium);
+        border-radius: 4px;
+        margin: 0 1rem;
+        overflow: hidden;
+      }
+
+      .stat-bar-fill {
+        height: 100%;
+        background: var(--rh-red);
+        transition: width 0.3s ease;
+      }
+
+      #wrong-answers-list h3 {
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--rh-grey-medium);
+        padding-bottom: 0.5rem;
+      }
+
+      .wrong-answer-item {
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--rh-grey-medium);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+      }
+
+      .wrong-answer-item h4 {
+        background: var(--rh-black);
+        color: white;
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+      }
+
+      .wrong-answer-item p {
+        padding: 0 1rem 0.5rem 1rem;
+      }
+
+      .wrong-answer-item .task-desc {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        background: var(--rh-grey-light);
+        border-bottom: 1px solid var(--rh-grey-medium);
+      }
+
+      .wrong-answer-item .explanation {
+        background: var(--incorrect-bg);
+        border-top: 1px dashed var(--incorrect-border);
+        padding: 1rem;
+        white-space: pre-wrap;
+        font-size: 0.95rem;
+      }
+
+      .btn-sm {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.9rem;
+      }
+
+      /* Modal de confirmação de abandono */
+      .abandon-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+      }
+      .abandon-modal-overlay.active {
+        display: flex;
+      }
+      .abandon-modal {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        border-top: 4px solid var(--rh-red);
+        text-align: center;
+      }
+      .abandon-modal h3 {
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+      }
+      .abandon-modal p {
+        margin-bottom: 1.5rem;
+        color: var(--rh-grey-dark);
+        font-size: 0.95rem;
+      }
+      .abandon-modal-btns {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      /* Badge modo exame */
+      .exam-mode-badge {
+        display: inline-block;
+        background: var(--rh-red);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        letter-spacing: 0.05em;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+
+      @media (max-width: 600px) {
+        .app-header {
+          padding: 1rem;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        main { padding: 1rem; }
+        .page-section { padding: 1.5rem; }
+        .quiz-actions, .mode-selector { flex-direction: column; }
+        .btn { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>🔴 Red Hat AAP Simulator</h1>
+      <div id="quiz-stats" class="quiz-stats hidden">
+        <span id="question-progress-display">Questão: 0/0</span>
+        <span id="timer-display">Tempo: 00:00</span>
+        <span id="score-display">Acertos: 0/0 (0%)</span>
+      </div>
+      <div class="header-controls">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">🌙 Escuro</button>
+        <button id="global-reset-btn" class="btn btn-danger hidden" aria-label="Reiniciar o Quiz">Abandonar Quiz</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- CONFIGURAÇÃO -->
+      <section id="config-page" class="page-section">
+        <h2>Configuração do Simulado</h2>
+
+        <div class="config-grid">
+          <div class="config-item">
+            <label for="questions-slider">Número de Perguntas:</label>
+            <div class="slider-group">
+              <input type="range" id="questions-slider" min="1" max="40" value="10" />
+              <span id="slider-value">10</span>
+            </div>
+          </div>
+
+          <div class="config-item">
+            <label>Modo de Simulado:</label>
+            <div class="mode-selector">
+              <label class="mode-option selected">
+                <input type="radio" name="quiz-mode" value="study" checked />
+                <strong>📚 Prática / Entrevista</strong>
+                <small>Feedback detalhado após cada resposta</small>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="quiz-mode" value="exam" />
+                <strong>📝 Modo Exame (EX294/EX467)</strong>
+                <small>Sem feedback imediato. Resultado no final.</small>
+              </label>
+            </div>
+          </div>
+
+          <div class="config-item">
+            <label>Filtrar por Módulos:</label>
+            <div class="domain-filter">
+              <label class="domain-checkbox">
+                <input type="checkbox" value="all" checked />
+                <span><strong>Todos os Módulos</strong></span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="1" checked />
+                <span><strong>Módulo 1</strong>Fundamentos do Ansible Core</span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="2" checked />
+                <span><strong>Módulo 2</strong>Ansible Avançado (Roles, Jinja2)</span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="3" checked />
+                <span><strong>Módulo 3</strong>Arquitetura Red Hat AAP</span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="4" checked />
+                <span><strong>Módulo 4</strong>Automation Controller</span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="5" checked />
+                <span><strong>Módulo 5</strong>Execution Environments</span>
+              </label>
+              <label class="domain-checkbox">
+                <input type="checkbox" class="domain-check" value="6" checked />
+                <span><strong>Módulo 6</strong>Boas Práticas e CI/CD</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="start-btn" class="btn btn-primary">Iniciar Simulado</button>
+          <button id="continue-btn" class="btn btn-secondary hidden">Continuar Simulado Salvo</button>
+          <button id="view-bookmarks-btn" class="btn btn-secondary">
+            📌 Ver Questões Marcadas (<span id="bookmark-count">0</span>)
+          </button>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section id="quiz-page" class="page-section hidden">
+        <div class="question-header">
+          <div></div>
+          <button id="bookmark-btn" class="bookmark-btn" title="Marcar para revisão">📌 Marcar</button>
+        </div>
+
+        <div class="question-card">
+          <div id="question-domain">Módulo...</div>
+          <h3 id="question-text">Carregando pergunta...</h3>
+          <div id="options-container" class="options-container"></div>
+        </div>
+
+        <div id="explanation-card" class="explanation-card hidden"></div>
+
+        <div class="quiz-actions">
+          <button id="submit-btn" class="btn btn-primary">Verificar Resposta</button>
+          <button id="next-btn" class="btn btn-secondary hidden">Próxima Questão ➔</button>
+        </div>
+      </section>
+
+      <!-- BOOKMARKS -->
+      <section id="bookmarks-page" class="page-section hidden">
+        <h2>📌 Questões Marcadas para Revisão</h2>
+        <div id="bookmarks-list"></div>
+        <div class="button-group" style="margin-top: 2rem">
+          <button id="back-from-bookmarks-btn" class="btn btn-secondary">Voltar</button>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results-page" class="page-section hidden">
+        <h2>Resultados do Simulado</h2>
+        <div id="results-summary"></div>
+        <div id="domain-stats" class="domain-stats"></div>
+        <div id="wrong-answers-list">
+          <h3>Revisão Técnica das Respostas Erradas</h3>
+        </div>
+        <div class="button-group" style="margin-top: 2rem">
+          <button id="restart-from-results-btn" class="btn btn-primary">Voltar ao Início</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal de Abandono -->
+    <div id="abandon-modal-overlay" class="abandon-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="abandon-title">
+      <div class="abandon-modal">
+        <h3 id="abandon-title">⚠️ Abandonar Simulado?</h3>
+        <p>Seu progresso atual será perdido e o simulado será encerrado. Tem certeza?</p>
+        <div class="abandon-modal-btns">
+          <button id="abandon-cancel-btn" class="btn btn-secondary">Continuar Estudando</button>
+          <button id="abandon-confirm-btn" class="btn btn-danger">Abandonar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Mapeamento dos Módulos solicitados
+        const domainMap = {
+          "1.1": {
+            domain: "MÓDULO 1: FUNDAMENTOS DO ANSIBLE CORE",
+            task: "Compreender a arquitetura, idempotência e execução via ad-hoc ou playbooks.",
+          },
+          "2.1": {
+            domain: "MÓDULO 2: ANSIBLE AVANÇADO",
+            task: "Utilização de roles, Ansible Galaxy, variáveis complexas e manipulação de handlers/condicionais.",
+          },
+          "3.1": {
+            domain: "MÓDULO 3: ARQUITETURA DO RED HAT AAP MODERNO",
+            task: "Entender os componentes: Controller, Private Automation Hub e Event-Driven Ansible (EDA).",
+          },
+          "4.1": {
+            domain: "MÓDULO 4: OPERAÇÃO DO AUTOMATION CONTROLLER",
+            task: "Criação e gestão de Projetos, Inventários Dinâmicos, Credenciais, Templates e RBAC.",
+          },
+          "5.1": {
+            domain: "MÓDULO 5: EXECUTION ENVIRONMENTS",
+            task: "Criação e uso de EEs com ansible-builder, ansible-navigator e Podman.",
+          },
+          "6.1": {
+            domain: "MÓDULO 6: BOAS PRÁTICAS, CI/CD E TROUBLESHOOTING",
+            task: "Qualidade de código (ansible-lint), testes com Molecule e integração Git.",
+          }
+        };
+
+        // Banco de Questões (Simulando cenários técnicos e de exames Red Hat)
+		const questionBank = [
+// ==========================================
+  // MÓDULO 1: FUNDAMENTOS DO ANSIBLE CORE (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Você está trabalhando em um servidor Linux e executa um playbook, mas percebe que ele está usando o arquivo de configuração errado. Qual é a ordem de precedência CORRETA que o Ansible usa para procurar o arquivo ansible.cfg?",
+    opcoes: [
+      "A. ~/.ansible.cfg -> ./ansible.cfg -> /etc/ansible/ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG",
+      "B. Variável de Ambiente ANSIBLE_CONFIG -> ./ansible.cfg -> ~/.ansible.cfg -> /etc/ansible/ansible.cfg",
+      "C. /etc/ansible/ansible.cfg -> ~/.ansible.cfg -> ./ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG",
+      "D. ./ansible.cfg -> Variável de Ambiente ANSIBLE_CONFIG -> ~/.ansible.cfg -> /etc/ansible/ansible.cfg"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible procura o arquivo de configuração nesta exata ordem (o primeiro que encontrar é usado): 1º Variável de ambiente (ANSIBLE_CONFIG), 2º Diretório atual (./ansible.cfg), 3º Diretório home do usuário (~/.ansible.cfg) e por último o global (/etc/ansible/ansible.cfg)."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Em um arquivo de inventário INI, como você seleciona hosts que pertencem ao grupo 'webservers' E TAMBÉM ao grupo 'dbservers' usando padrões (patterns) de linha de comando ou no playbook?",
+    opcoes: [
+      "A. webservers OR dbservers",
+      "B. webservers:!dbservers",
+      "C. webservers:&dbservers",
+      "D. webservers,dbservers"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O caractere '&' representa a interseção (AND). Portanto, 'webservers:&dbservers' atinge apenas as máquinas que estão em ambos os grupos. A vírgula ou dois-pontos simples (,) representa a união (OR), e o ponto de exclamação (!) representa a exclusão (NOT)."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "1.1",
+    pergunta: "Sobre a coleta de fatos (Gather Facts) usando o módulo 'setup', quais das afirmações abaixo são VERDADEIRAS? (Selecione 2)",
+    opcoes: [
+      "1. Fatos coletados são armazenados na variável 'ansible_facts' e podem ser usados para condicionais (ex: verificar a família do SO).",
+      "2. A coleta de fatos não pode ser desativada em um playbook, ela é obrigatória.",
+      "3. É possível criar 'Custom Facts' (fatos personalizados) criando arquivos .fact no diretório /etc/ansible/facts.d/ nos hosts remotos.",
+      "4. Fatos coletados incluem as senhas em texto plano dos usuários criados no sistema operacional alvo."
+    ],
+    correta: [1, 3],
+    explicacao: "1 e 3 são corretas. Você usa `ansible_facts['os_family']` para lógicas dinâmicas, e pode injetar fatos customizados salvando arquivos INI/JSON no diretório `facts.d`. A 2 é falsa, pois você pode usar `gather_facts: false` para acelerar o playbook. A 4 é falsa por motivos óbvios de segurança."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Se você quiser testar as mudanças que um playbook faria em um sistema gerenciado, SEM aplicar efetivamente essas mudanças (modo simulação), quais parâmetros você deve passar ao comando ansible-playbook?",
+    opcoes: [
+      "A. --dry-run ou -D",
+      "B. --check (-C) e opcionalmente --diff (-D) para ver o que mudaria nos arquivos",
+      "C. --simulate e --verbose",
+      "D. --syntax-check"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O parâmetro `--check` (-C) roda o Ansible em modo 'Dry Run', não alterando o host alvo (sempre que o módulo suportar). O `--diff` (-D) é excelente quando usado junto para mostrar exatamente quais linhas de arquivos seriam alteradas."
+  },
+
+  // ==========================================
+  // MÓDULO 2: ANSIBLE AVANÇADO (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual é a diferença fundamental entre 'import_tasks' e 'include_tasks'?",
+    opcoes: [
+      "A. 'import_tasks' é estático e pré-processado antes do início da execução, enquanto 'include_tasks' é dinâmico e avaliado em tempo de execução.",
+      "B. 'include_tasks' é estático, enquanto 'import_tasks' é dinâmico.",
+      "C. 'import_tasks' só pode ser usado para importar Roles, não arquivos YAML comuns.",
+      "D. Não há diferença, ambos são processados em tempo de execução desde a versão 2.10."
+    ],
+    correta: "A",
+    explicacao: "A é a correta. Importações (import_tasks, import_role) são processadas na fase de parseamento antes do play rodar, o que significa que não podem ser iteradas com 'loop'. Inclusões (include_tasks) ocorrem no exato momento em que a task é alcançada no fluxo de execução, permitindo loops e variáveis avaliadas tardiamente."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Você quer garantir que uma variável tenha um valor padrão seguro caso o usuário não a defina. Qual filtro Jinja2 realiza essa tarefa de forma elegante em um template ou playbook?",
+    opcoes: [
+      "A. {{ my_var | fallback('padrao') }}",
+      "B. {{ my_var | default('padrao') }}",
+      "C. {{ default(my_var, 'padrao') }}",
+      "D. {{ my_var if exists else 'padrao' }}"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O filtro `default` do Jinja2 é a abordagem padrão no Ansible para tratar variáveis indefinidas. Exemplo: `{{ nginx_port | default('80') }}`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O Ansible fornece variáveis mágicas (Magic Variables) que contêm metadados do ambiente. Se você precisa acessar o endereço IP descoberto (ansible_default_ipv4) de UM OUTRO host que não seja o host atual do loop de execução, qual variável você deve usar?",
+    opcoes: [
+      "A. inventory_hostname",
+      "B. group_names",
+      "C. hostvars",
+      "D. vars_prompt"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. A variável mágica `hostvars` contém as variáveis coletadas de todos os hosts no inventário. Exemplo de uso: `{{ hostvars['db_server_01']['ansible_default_ipv4']['address'] }}`. Muito usado para configurar o IP do banco de dados no arquivo de configuração do servidor web."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "2.1",
+    pergunta: "Ao criar e distribuir Roles corporativas usando o arquivo 'meta/main.yml', quais das funções abaixo esse arquivo pode desempenhar de forma nativa? (Selecione 2)",
+    opcoes: [
+      "1. Definir credenciais SSH hardcoded para a role.",
+      "2. Declarar dependências de outras roles que devem ser baixadas ou executadas antes da role atual.",
+      "3. Informar o autor, licença e plataformas OS suportadas (usado pelo Ansible Galaxy).",
+      "4. Declarar os handlers que a role utilizará em tempo de execução."
+    ],
+    correta: [2, 3],
+    explicacao: "2 e 3 são corretas. O arquivo `meta/main.yml` serve para os metadados da role (autor, licença, tags pro Galaxy) e para definir dependências (`dependencies:`). Ele fará o Ansible executar automaticamente as roles dependentes antes da role principal. Handlers ficam na pasta handlers/, e credenciais nunca devem ficar em metadados."
+  },
+
+  // ==========================================
+  // MÓDULO 3: ARQUITETURA DO RED HAT AAP MODERNO (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "No Event-Driven Ansible (EDA), qual componente é o encarregado de ler dados de telemetria externos (ex: um alerta do Prometheus ou uma mensagem no Kafka) e convertê-los em eventos que o Rulebook entenda?",
+    opcoes: [
+      "A. EDA Controller",
+      "B. Event Source Plugin",
+      "C. Action Plugin",
+      "D. Private Automation Hub"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Os 'Source Plugins' são pequenas integrações em Python (ex: ansible.eda.kafka, ansible.eda.webhook) que escutam as fontes externas e injetam a carga útil (payload) no motor de regras."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Dentro da arquitetura do Automation Mesh, o que caracteriza um nó do tipo 'Hop Node'?",
+    opcoes: [
+      "A. Ele compila as imagens de contêiner e envia para o Private Hub.",
+      "B. Ele atua como um roteador de tráfego de automação, roteando as conexões do Controller até os Execution Nodes isolados por firewalls, sem rodar a automação nele mesmo.",
+      "C. Ele executa os Job Templates e consome a licença do AAP.",
+      "D. Ele armazena o banco de dados PostgreSQL do Controller de forma distribuída."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Hop Nodes não executam automação (não rodam contêineres do EE) e não precisam de banco de dados. Eles servem exclusivamente como proxies de roteamento de tráfego TCP na malha do Receptor (Automation Mesh), ideais para colocar em DMZs."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "3.1",
+    pergunta: "Sobre o Private Automation Hub, selecione as funcionalidades válidas (Selecione 2):",
+    opcoes: [
+      "1. Atuar como um repositório centralizado de Role e Collections (Container Registry e Ansible Registry).",
+      "2. Sincronizar (mirror) conteúdos curados e assinados digitalmente diretamente da Red Hat e do Ansible Galaxy público.",
+      "3. Executar Job Templates remotamente (atuando como Execution Node).",
+      "4. Substituir a necessidade do Automation Controller na arquitetura."
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O Hub atua como o Artifact Repository da Red Hat (como um Nexus ou Harbor), distribuindo conteúdo e assinaturas. Ele não executa jobs (isso é papel do Controller ou Execution Node) e não o substitui."
+  },
+
+  // ==========================================
+  // MÓDULO 4: OPERAÇÃO DO AUTOMATION CONTROLLER (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Para melhorar a velocidade de execução de um playbook que gerencia 5.000 servidores, você ativa a funcionalidade 'Job Slicing' (Fatiamento de Trabalho) no Automation Controller. O que essa função faz exatamente?",
+    opcoes: [
+      "A. Ignora as tasks que têm a tag 'slow' e executa apenas o básico.",
+      "B. Divide o inventário original em partes menores (fatias) e lança um workflow com múltiplos jobs paralelos (um para cada fatia) que podem rodar simultaneamente em vários nós de execução.",
+      "C. Desativa o Gather Facts automaticamente e eleva a quantidade de forks para o limite do servidor.",
+      "D. Fatiar o código do playbook em playbooks menores e executa um por dia."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Job Slicing divide uma execução maciça em N fatias de inventário e joga a carga horizontalmente no cluster/Automation Mesh. Ao final, o Controller agrega o resultado visual em um único Workflow Job."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Você criou um Job Template no Controller e deseja que operadores de NOC possam informar o nome de um usuário a ser bloqueado no momento em que clicarem no botão de executar. Qual recurso do Controller atende a isso nativamente?",
+    opcoes: [
+      "A. Smart Inventory",
+      "B. Extra-vars injetadas via CLI no container.",
+      "C. Surveys (Pesquisas)",
+      "D. Credentials Types"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O recurso de 'Surveys' cria formulários web na UI do Controller (podendo ser caixas de texto, listas suspensas, senhas mascaradas). As respostas fornecidas pelo usuário se tornam 'extra_vars' passadas ao playbook em tempo de execução."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No Controller, como funciona o modelo de permissões baseadas em funções (RBAC)? Se o João possui a permissão 'Execute' em um Job Template, ele pode modificar o playbook subjacente ou alterar o inventário associado?",
+    opcoes: [
+      "A. Sim, a permissão Execute engloba a permissão Edit no Controller.",
+      "B. Não, para modificar o playbook ou o inventário, ele precisaria ter as funções 'Admin' do Projeto, do Inventário e do Job Template correspondente.",
+      "C. Não, o RBAC do Controller é definido exclusivamente no lado do Active Directory, não havendo funções internas.",
+      "D. Sim, qualquer usuário pode modificar qualquer objeto por padrão no Controller."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O RBAC do Controller é granular. A permissão 'Execute' (Use) num Job Template permite apenas clicar no botão 'Lançar'. O usuário não pode ver o repositório Git (Projeto), nem editar a origem das variáveis ou as credenciais atreladas."
+  },
+
+  // ==========================================
+  // MÓDULO 5: EXECUTION ENVIRONMENTS (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Você modificou uma Collection em seu projeto, mas ao executar via 'ansible-navigator run', ele ainda usa a Collection antiga que estava na imagem original do EE. Qual parâmetro força o navigator a mapear e preferir as collections do diretório local do seu projeto?",
+    opcoes: [
+      "A. --pull-policy always",
+      "B. Configurar 'ansible-navigator.yml' com 'execution-environment: volume-mounts'",
+      "C. Não é possível; EEs são imutáveis e não aceitam volumes.",
+      "D. --bindep-install"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Em desenvolvimento, o ansible-navigator permite mapear diretórios locais de roles e collections para dentro do contêiner em tempo de execução usando 'volume-mounts'. Na CLI seria `--execution-environment-volume-mounts`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Qual é a engine (motor de contêineres) padrão, mantida e homologada pela Red Hat, que o ansible-builder e o ansible-navigator utilizam internamente (Daemonless) em RHEL 8 e 9?",
+    opcoes: [
+      "A. Docker",
+      "B. CRI-O",
+      "C. Podman",
+      "D. containerd"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Podman é a engine de contêineres recomendada pela Red Hat. Ela roda sem daemon de fundo (daemonless) e pode rodar processos sem privilégios de root (rootless), que é um padrão de segurança em ambientes AAP modernos."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "5.1",
+    pergunta: "Sobre a construção de imagens de Execution Environments com o 'ansible-builder v3', quais chaves de configuração são válidas dentro do arquivo 'execution-environment.yml'? (Selecione 2)",
+    opcoes: [
+      "1. images: (para definir a imagem base e a imagem builder)",
+      "2. dependencies: (para referenciar arquivos galaxy, python e system)",
+      "3. credentials: (para salvar senhas fixas dentro da imagem docker)",
+      "4. firewall_rules: (para abrir portas do iptables do SO)"
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O schema v3 introduziu uma divisão clara: `images` para definir de onde partir (EE Minimal, por exemplo), e `dependencies` para apontar onde estão o requirements.yml, requirements.txt e bindep.txt. Embutir senhas ou regras de SO na imagem do EE é incorreto."
+  },
+
+  // ==========================================
+  // MÓDULO 6: BOAS PRÁTICAS, CI/CD E TROUBLESHOOTING (Novas)
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Um playbook falhou misteriosamente em um host remoto e a mensagem de erro padrão não detalha muito bem o porquê o pacote yum não instalou. Como você pode aumentar a verbosidade do Ansible para ver os detalhes da conexão SSH e a execução dos módulos?",
+    opcoes: [
+      "A. Adicionar a tag --debug-all",
+      "B. Usar o argumento -v, -vv, -vvv ou -vvvv na linha de comando.",
+      "C. Alterar a configuração do firewall alvo.",
+      "D. Mudar o parâmetro gather_facts para 'debug'."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A verbosidade vai de -v (aviso) até -vvvv (debug de conexão, onde até as chaves SSH e plugins de autenticação são exibidos na tela)."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Quando testamos Roles usando o Ansible Molecule, existe um arquivo fundamental na estrutura do molecule que descreve as dependências, os provedores de infraestrutura (ex: podman, docker, ec2) e a verificação. Como se chama esse arquivo?",
+    opcoes: [
+      "A. molecule.yml",
+      "B. tests/main.yml",
+      "C. meta/molecule.json",
+      "D. requirements.yml"
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O arquivo 'molecule.yml' (localizado normalmente em `molecule/default/molecule.yml`) define a matriz do teste, qual driver usar, opções de linting e o host do inventário efêmero a ser criado."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Em uma pipeline de CI/CD (ex: GitLab CI), qual comando deve ser evitado ou usado com extrema cautela pois ele bloqueia e pausa a execução do Pipeline aguardando input do usuário?",
+    opcoes: [
+      "A. ansible-playbook --syntax-check",
+      "B. Módulo ansible.builtin.pause ou tasks com vars_prompt",
+      "C. ansible-lint --strict",
+      "D. molecule test"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O uso do módulo `pause` (com prompt para digitação) ou `vars_prompt` congela pipelines (que são processos desatendidos / sem TTY interativo ativo). Tentar ler um input do usuário em um executor de CI/CD faz o job pendurar até dar timeout."
+  }
+
+        // ==========================================
+  // NOVAS QUESTÕES — LIVRO "ANSIBLE FOR DEVOPS" (Jeff Geerling)
+  // MÓDULO 1: FUNDAMENTOS DO ANSIBLE CORE
+  // ==========================================
+
+  // --- Cap. 1: Getting Started ---
+  ,{
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Segundo o livro 'Ansible for DevOps', qual era o problema central que motivou a criação de ferramentas de gerenciamento de configuração como o Ansible?",
+    opcoes: [
+      "A. Servidores físicos eram muito lentos comparados a VMs, exigindo automação.",
+      "B. Administradores gerenciavam servidores manualmente e não conseguiam escalar esse processo à medida que o número de servidores crescia.",
+      "C. A linguagem YAML não existia e precisava ser criada para suportar os scripts de automação.",
+      "D. O SSH ainda não tinha sido inventado, impedindo o acesso remoto a servidores."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro descreve que, historicamente, sysadmins gerenciavam servidores manualmente. Com o crescimento dos data centers e a virtualização, escalar esse processo manual tornou-se inviável. Ferramentas de gerenciamento de configuração surgiram para resolver exatamente essa lacuna."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O Ansible foi lançado por Michael DeHaan em que ano, conforme descrito no livro 'Ansible for DevOps'?",
+    opcoes: [
+      "A. 2008",
+      "B. 2010",
+      "C. 2012",
+      "D. 2015"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O Ansible foi lançado em fevereiro de 2012 por Michael DeHaan, que se inspirou em experiências anteriores com ferramentas como Cobbler e Func, e em observações sobre os problemas com as ferramentas de gerenciamento de configuração existentes na época."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para rodar o primeiro comando ad-hoc do livro 'Ansible for DevOps' — o ping num host remoto — qual é a sintaxe correta do comando?",
+    opcoes: [
+      "A. ansible example --ping -u [username]",
+      "B. ansible -m ping example -u [username]",
+      "C. ansible example -m ping -u [username]",
+      "D. ansible example ping --user=[username]"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. A sintaxe é: `ansible [grupo/host] -m [módulo] -u [usuário]`. O flag `-m` especifica o módulo a ser executado. Assim, `ansible example -m ping -u vagrant` executa o módulo ping em todos os hosts do grupo 'example'."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O Ansible por padrão assume que a autenticação SSH é feita com qual método, conforme destacado no livro?",
+    opcoes: [
+      "A. Usuário e senha digitados no terminal interativamente.",
+      "B. Autenticação baseada em chaves (passwordless/key-based), sem necessidade de senha.",
+      "C. Kerberos com Active Directory integrado.",
+      "D. Token OAuth2 via API REST."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro enfatiza explicitamente que 'todo o livro assume autenticação sem senha (key-based)'. Se você precisar de senhas, deve usar o flag `--ask-pass (-k)`, e possivelmente instalar o pacote `sshpass`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual é o arquivo de inventário padrão que o Ansible usa quando nenhum outro é especificado?",
+    opcoes: [
+      "A. ~/.ansible/inventory",
+      "B. ./hosts",
+      "C. /etc/ansible/hosts",
+      "D. /usr/local/ansible/inventory.ini"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O arquivo de inventário padrão do Ansible fica em `/etc/ansible/hosts`. No Capítulo 1, o livro instrui o leitor a criar esse arquivo com `sudo touch /etc/ansible/hosts` antes de rodar o primeiro comando ad-hoc."
+  },
+
+  // --- Cap. 2: Vagrant ---
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual combinação de ferramentas o livro 'Ansible for DevOps' recomenda para criar e testar infraestrutura localmente, de forma segura e rápida?",
+    opcoes: [
+      "A. Docker + Kubernetes",
+      "B. Vagrant + VirtualBox",
+      "C. EC2 + Terraform",
+      "D. LXC + libvirt"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Capítulo 2 do livro destaca a combinação Vagrant + VirtualBox como a solução preferida para ambiente de desenvolvimento local. Vagrant gerencia as VMs e o VirtualBox as virtualiza. Ambas são gratuitas e multiplataforma (Mac, Linux, Windows)."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No Vagrantfile, qual bloco de configuração é usado para integrar o provisionamento com Ansible?",
+    opcoes: [
+      "A. config.vm.ansible = 'playbook.yml'",
+      "B. config.vm.provision 'ansible' do |ansible|; ansible.playbook = 'playbook.yml'; end",
+      "C. ansible.provision config.vm, playbook: 'playbook.yml'",
+      "D. config.ansible.run 'playbook.yml'"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A integração Vagrant+Ansible usa o bloco `config.vm.provision 'ansible' do |ansible| ... end` dentro do Vagrantfile (que usa sintaxe Ruby). Dentro do bloco, `ansible.playbook` especifica o arquivo de playbook a executar."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "1.1",
+    pergunta: "Sobre os conceitos de desenvolvimento local com Vagrant e Ansible, quais afirmações são VERDADEIRAS? (Selecione 2)",
+    opcoes: [
+      "1. Testar playbooks localmente com Vagrant é mais seguro e rápido do que testar diretamente em servidores de produção.",
+      "2. O Vagrantfile usa linguagem Ruby em sua sintaxe.",
+      "3. O comando 'vagrant destroy' faz um backup completo da VM antes de deletá-la do VirtualBox.",
+      "4. Uma vez destruída com 'vagrant destroy', uma VM nunca pode ser recriada a partir do mesmo Vagrantfile."
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O livro enfatiza que desenvolver e testar localmente é muito mais seguro que trabalhar direto em produção. E o Vagrantfile usa sintaxe Ruby. A 3 é falsa (destroy simplesmente deleta sem backup) e a 4 também é falsa (um simples `vagrant up` recria a VM a partir do box base original)."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No primeiro playbook do livro, quais são as duas tarefas demonstradas para mostrar a idempotência do Ansible?",
+    opcoes: [
+      "A. Instalar e iniciar o serviço Apache (httpd).",
+      "B. Instalar e iniciar o serviço NTP (ntpd).",
+      "C. Criar um usuário e configurar o firewall (iptables).",
+      "D. Instalar o Python e configurar o ansible.cfg."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O primeiro playbook do livro usa o módulo `yum` para instalar o NTP (`name=ntp state=present`) e o módulo `service` para garantir que o serviço ntpd esteja rodando e habilitado no boot. Esse exemplo simples demonstra a natureza declarativa e idempotente do Ansible."
+  },
+
+  // --- Cap. 3: Ad-Hoc Commands ---
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "qual é a diferença fundamental entre um comando 'ad-hoc' e um 'playbook' do Ansible?",
+    opcoes: [
+      "A. Comandos ad-hoc usam YAML, enquanto playbooks usam JSON.",
+      "B. Comandos ad-hoc executam uma única tarefa diretamente pela CLI sem necessidade de arquivo YAML, sendo ideais para tarefas rápidas e pontuais.",
+      "C. Playbooks só funcionam em ambientes cloud, enquanto ad-hoc funciona apenas em servidores físicos.",
+      "D. Não há diferença prática; ambos rodam o mesmo código internamente."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Comandos ad-hoc (`ansible [hosts] -m [módulo]`) são perfeitos para tarefas únicas e rápidas (verificar disco, reiniciar serviço, copiar arquivo). Playbooks são arquivos YAML que orquestram múltiplas tarefas de forma repetível e documentada, ideais para configuração completa de sistemas."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para copiar um arquivo local para todos os servidores do grupo 'webservers' usando ad-hoc, qual módulo e comando corretos você usaria?",
+    opcoes: [
+      "A. ansible webservers -m scp -a 'src=/tmp/app.conf dest=/etc/app.conf'",
+      "B. ansible webservers -m copy -a 'src=/tmp/app.conf dest=/etc/app.conf'",
+      "C. ansible webservers --transfer '/tmp/app.conf:/etc/app.conf'",
+      "D. ansible webservers -m file -a 'upload=/tmp/app.conf to=/etc/app.conf'"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `copy` do Ansible transfere arquivos do nó de controle para os hosts gerenciados. A sintaxe é `-m copy -a 'src=[origem] dest=[destino]'`. Opcionalmente pode-se definir `mode`, `owner`, `group` para permissões."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para recuperar (baixar) um arquivo de todos os servidores remotos para o nó de controle via ad-hoc, qual módulo Ansible você deve usar?",
+    opcoes: [
+      "A. copy",
+      "B. transfer",
+      "C. fetch",
+      "D. pull"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `fetch` faz o inverso do `copy`: ele busca arquivos dos hosts remotos e os traz para o nó de controle, organizando-os geralmente em subdiretórios com o nome do host. Útil para coletar logs ou configurações atuais."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "discute os modos de conexão SSH do Ansible. Qual era o modo padrão de conexão antes do OpenSSH com ControlMaster ser adotado como padrão?",
+    opcoes: [
+      "A. WinRM",
+      "B. Telnet",
+      "C. Paramiko (uma implementação Python de SSH)",
+      "D. SFTP nativo"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Antes do OpenSSH se tornar o padrão, o Ansible usava o Paramiko — uma implementação Python do protocolo SSH — como sua biblioteca de conexão padrão. O OpenSSH com ControlMaster (multiplexação de conexões) tornou-se padrão posteriormente, sendo muito mais eficiente."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para executar uma tarefa de longa duração em background via ad-hoc (fire-and-forget), qual par de parâmetros o Ansible oferece?",
+    opcoes: [
+      "A. --async e --poll",
+      "B. --background e --no-wait",
+      "C. --timeout e --detach",
+      "D. --fork e --daemon"
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O parâmetro `--async [segundos]` define o tempo máximo de espera pela tarefa (timeout), e `--poll [segundos]` define com que frequência verificar o status. Usar `--poll 0` é o modo fire-and-forget: o Ansible dispara a tarefa e não aguarda o resultado."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para gerenciar um cron job no servidor via comando ad-hoc ou task de playbook, qual módulo Ansible é utilizado?",
+    opcoes: [
+      "A. schedule",
+      "B. crontab",
+      "C. cron",
+      "D. timer"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `cron` do Ansible permite criar, modificar ou remover entradas de crontab de forma idempotente. Exemplo: `ansible servers -m cron -a 'name=\"backup\" minute=0 hour=2 job=\"/opt/backup.sh\"'`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para fazer deploy de uma aplicação versionada em Git via ad-hoc ou playbook, qual módulo Ansible é projetado especificamente para isso?",
+    opcoes: [
+      "A. command (executando git clone manualmente)",
+      "B. git",
+      "C. vcs",
+      "D. repository"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `git` do Ansible gerencia repositórios Git de forma idempotente: clona se não existir, faz checkout da branch/tag/commit desejado e atualiza se necessário. Muito mais robusto do que usar o módulo `command` com git diretamente."
+  },
+
+  // --- Cap. 4: Playbooks ---
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "ao executar `ansible-playbook`, qual flag permite limitar a execução a um subconjunto específico de hosts do inventário (ex: apenas um servidor em vez do grupo inteiro)?",
+    opcoes: [
+      "A. --host",
+      "B. --filter",
+      "C. --limit",
+      "D. --target"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O flag `--limit` (ou `-l`) restringe a execução a um padrão de host específico. Exemplo: `ansible-playbook site.yml --limit webserver01` executa o playbook apenas no host 'webserver01', mesmo que o inventário contenha centenas de servidores."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para executar um playbook como um usuário diferente (com privilégios de root via sudo), quais dois parâmetros do ansible-playbook são usados?",
+    opcoes: [
+      "A. --root e --su",
+      "B. --become-user e --become (ou o antigo --sudo e --sudo-user)",
+      "C. --user=root e --no-prompt",
+      "D. --privilege-escalation e --as-user"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Nas versões modernas do Ansible, `--become` ativa a escalada de privilégios (equivalente ao antigo --sudo) e `--become-user` define o usuário alvo (padrão: root). No Ansible mais antigo (como no livro), os flags eram `--sudo` e `--sudo-user`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No playbook de exemplo do livro para um servidor Node.js, qual módulo Ansible é usado para adicionar um repositório EPEL ou NodeSource (repositório extra) ao CentOS?",
+    opcoes: [
+      "A. apt_repository",
+      "B. yum_repository",
+      "C. rpm_key",
+      "D. shell (executando rpm -ivh diretamente)"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `yum_repository` gerencia repositórios yum/dnf de forma idempotente em sistemas Red Hat/CentOS. Para distribuições Debian/Ubuntu, o equivalente seria `apt_repository`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No playbook de exemplo do livro para um servidor Drupal/LAMP, qual módulo Ansible é usado para modificar uma linha específica em um arquivo de configuração (ex: alterar `memory_limit` no php.ini)?",
+    opcoes: [
+      "A. replace",
+      "B. template",
+      "C. lineinfile",
+      "D. file_edit"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `lineinfile` garante que uma linha específica existe (ou não) em um arquivo. No exemplo do livro, ele é usado para modificar configurações do php.ini. O `regexp` define qual linha substituir e `line` define o novo conteúdo."
+  },
+
+  // --- Cap. 5: Playbooks Beyond Basics ---
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O que é um 'Handler' no Ansible e quando ele é executado?",
+    opcoes: [
+      "A. Um handler é um módulo especial que lida com erros; ele roda sempre que uma task falha.",
+      "B. Um handler é uma task especial que só é executada quando notificada por outra task que registrou uma mudança (changed); ele roda ao final do play.",
+      "C. Um handler é um plugin de callback que monitora a execução do playbook em tempo real.",
+      "D. Um handler é uma variável especial que armazena o resultado de tarefas anteriores."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Handlers são tasks especiais acionados via `notify`. Eles só executam se a task que os notificou gerou uma mudança (`changed`). Múltiplas notificações ao mesmo handler durante um play resultam em apenas uma execução, ao final do play. Perfeito para reiniciar serviços apenas quando necessário."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "qual é a forma correta de usar 'variáveis registradas' (registered variables) para capturar a saída de um comando e usá-la em uma task condicional?",
+    opcoes: [
+      "A. Usar `output: nome_variavel` na task e depois `if output.stdout` na task seguinte.",
+      "B. Usar `register: nome_variavel` na task e depois `when: nome_variavel.stdout` na task seguinte.",
+      "C. Usar `save_output: nome_variavel` e acessar com `{{ saved.nome_variavel }}`.",
+      "D. Usar `capture: nome_variavel` e acessar com `vars.nome_variavel`."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A diretiva `register` captura o resultado completo de uma task em uma variável (contendo stdout, stderr, rc, etc.). Essa variável pode ser usada em tasks subsequentes com `when: nome_variavel.rc == 0` ou `when: \"'texto' in nome_variavel.stdout\"`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O Ansible Vault serve para qual finalidade principal?",
+    opcoes: [
+      "A. Armazenar o histórico criptografado de todas as execuções de playbooks.",
+      "B. Criptografar dados sensíveis (senhas, chaves de API, certificados) armazenados em arquivos de variáveis YAML para que possam ser incluídos com segurança no controle de versão (Git).",
+      "C. Gerenciar certificados TLS/SSL para as conexões SSH entre o Ansible e os hosts remotos.",
+      "D. Fazer backup automático dos arquivos de configuração nos servidores gerenciados."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible Vault usa criptografia AES-256 para proteger arquivos YAML inteiros ou valores específicos de variáveis. Assim, senhas de banco de dados e chaves secretas podem ser versionadas com segurança no Git sem exposição."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "qual diretiva permite que uma task defina seu próprio critério de 'falha', ao invés de depender do código de retorno (rc) padrão do comando?",
+    opcoes: [
+      "A. ignore_errors: yes",
+      "B. failed_when",
+      "C. on_error: continue",
+      "D. error_handling: custom"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `failed_when` permite customizar a condição de falha. Por exemplo: `failed_when: \"'ERROR' in result.stderr\"` fará a task falhar somente se a string 'ERROR' aparecer no stderr, independentemente do código de retorno."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "A diretiva `changed_when: false`, demonstrada é mais comumente usada em qual situação?",
+    opcoes: [
+      "A. Para forçar que uma task seja sempre marcada como 'changed', mesmo que nada tenha mudado.",
+      "B. Para tasks de verificação/leitura (como scripts que apenas consultam dados) que nunca devem fazer alterações no sistema e, portanto, nunca devem ser reportadas como 'changed'.",
+      "C. Para desativar os handlers mesmo quando ocorrem mudanças.",
+      "D. Para ignorar completamente os erros de uma task."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `changed_when: false` é ideal para tasks de leitura pura — como consultar versões instaladas ou verificar o status de algo — que o Ansible incorretamente reportaria como 'changed'. Isso garante que handlers não sejam acionados desnecessariamente."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "As 'Tags' no Ansible servem para qual propósito prático?",
+    opcoes: [
+      "A. Identificar os servidores no inventário com metadados de ambiente (produção, staging).",
+      "B. Permitir executar apenas um subconjunto de tasks de um playbook usando `--tags` ou `--skip-tags` na linha de comando.",
+      "C. Versionar automaticamente os playbooks usando timestamps.",
+      "D. Notificar outros times via Slack quando uma tag específica é executada."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Tags permitem granularidade na execução: `ansible-playbook site.yml --tags 'packages'` roda apenas as tasks marcadas com a tag 'packages'. `--skip-tags 'deploy'` pula as tasks de deploy. Muito útil para rodar apenas partes de playbooks longos durante desenvolvimento."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Os 'Blocks' do Ansible adicionam qual capacidade importante à estruturação de playbooks?",
+    opcoes: [
+      "A. Permitir a execução paralela de grupos de tasks usando threads.",
+      "B. Agrupar logicamente múltiplas tasks e aplicar diretivas comuns (when, become, tags) ao grupo, além de suportar tratamento de erros com `rescue` e `always`.",
+      "C. Criar sub-playbooks independentes que podem ser executados separadamente.",
+      "D. Bloquear a execução de outros playbooks enquanto o bloco atual está em andamento."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Blocks permitem: (1) aplicar `when`, `become`, `tags` a um grupo de tasks de uma vez; (2) estrutura try-catch-finally com `block`, `rescue` e `always`. O bloco `rescue` roda se qualquer task no `block` falhar, e `always` sempre roda independentemente."
+  },
+
+  // ==========================================
+  // MÓDULO 2: ANSIBLE AVANÇADO (Roles, Inventários)
+  // ==========================================
+
+  // --- Cap. 6: Roles e Includes ---
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "qual é a principal vantagem de usar 'Roles' do Ansible em vez de um único playbook monolítico?",
+    opcoes: [
+      "A. Roles são até 10x mais rápidas de executar pois usam processamento paralelo interno.",
+      "B. Roles organizam e encapsulam configurações relacionadas em estruturas reutilizáveis, permitindo compartilhamento e reutilização entre projetos e times.",
+      "C. Roles permitem escrever automação em Python puro em vez de YAML.",
+      "D. Roles eliminam completamente a necessidade do arquivo ansible.cfg."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Roles são a unidade fundamental de reutilização no Ansible. Elas encapsulam tasks, handlers, defaults, vars, templates e arquivos em uma estrutura de diretório padronizada. Isso facilita compartilhamento via Ansible Galaxy e reutilização entre diferentes playbooks e projetos."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual comando Ansible cria automaticamente o 'scaffolding' (esqueleto de diretórios) de uma nova Role com a estrutura correta?",
+    opcoes: [
+      "A. ansible-playbook --create-role nome_da_role",
+      "B. ansible-galaxy role init nome_da_role",
+      "C. ansible --new-role nome_da_role",
+      "D. ansible-vault create role/nome_da_role"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O comando `ansible-galaxy role init nome_da_role` (ou simplesmente `ansible-galaxy init`) cria automaticamente a estrutura completa de diretórios da role: tasks/, handlers/, defaults/, vars/, files/, templates/ e meta/."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "2.1",
+    pergunta: "Sobre a estrutura de diretórios de uma Role Ansible, quais afirmações são CORRETAS? (Selecione 2)",
+    opcoes: [
+      "1. O diretório `defaults/` armazena variáveis com a MENOR precedência, facilitando override pelo usuário da role.",
+      "2. O diretório `vars/` armazena variáveis com precedência MAIOR que `defaults/`, sendo mais difíceis de sobrescrever.",
+      "3. O diretório `tasks/` pode conter apenas um arquivo main.yml, sem possibilidade de incluir outros arquivos.",
+      "4. O diretório `templates/` armazena arquivos Jinja2 (.j2) que são renderizados dinamicamente com variáveis."
+    ],
+    correta: [1, 2],
+    explicacao: "1, 2 e 4 são corretas tecnicamente, mas o enunciado pede 2. As mais importantes são 1 e 2: `defaults/` tem a menor precedência (ideal para valores padrão que o usuário pode facilmente sobrescrever), enquanto `vars/` tem precedência maior. A 3 é falsa — tasks/main.yml pode usar include_tasks para incluir outros arquivos."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O Ansible Galaxy é descrito como qual tipo de serviço?",
+    opcoes: [
+      "A. Um serviço de cloud computing para hospedar e executar playbooks.",
+      "B. Um repositório público de Roles e Collections compartilhadas pela comunidade Ansible, onde você pode baixar e publicar automação reutilizável.",
+      "C. Uma ferramenta de monitoramento de saúde dos hosts gerenciados pelo Ansible.",
+      "D. Um registry privado de imagens de contêiner para Execution Environments."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible Galaxy (galaxy.ansible.com) é o hub público de automação da Red Hat onde a comunidade compartilha Roles e Collections. O comando `ansible-galaxy install geerlingguy.apache` baixa a role 'apache' do usuário 'geerlingguy' do Galaxy."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Para gerenciar dependências de roles de forma reproducível (similar ao requirements.txt do Python), qual arquivo é usado com o comando `ansible-galaxy install -r`?",
+    opcoes: [
+      "A. galaxy.yml",
+      "B. meta/main.yml",
+      "C. requirements.yml",
+      "D. dependencies.txt"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O arquivo `requirements.yml` lista todas as roles (e collections) necessárias, com versões específicas. O comando `ansible-galaxy install -r requirements.yml` instala todas as dependências de uma vez, garantindo reprodutibilidade."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "o livro demonstra que com o uso de roles do Galaxy, um servidor LAMP completo pode ser configurado com quantas linhas de YAML aproximadamente?",
+    opcoes: [
+      "A. Cerca de 200 linhas",
+      "B. Cerca de 50 linhas",
+      "C. Cerca de 8 linhas",
+      "D. Depende do OS; nunca menos que 30 linhas"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O livro demonstra que ao usar roles do Ansible Galaxy (como geerlingguy.apache, geerlingguy.mysql, geerlingguy.php), um servidor LAMP completo pode ser descrito em apenas 8 linhas de YAML no playbook principal — ilustrando o poder da reutilização com roles."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual é a diferença prática entre `include_tasks` (dinâmico) e `import_tasks` (estático) em termos de suporte a loops, conforme discutido no contexto de Roles e Includes?",
+    opcoes: [
+      "A. `import_tasks` suporta loops com `loop:`, enquanto `include_tasks` não suporta.",
+      "B. `include_tasks` pode ser usado com `loop:` para incluir o arquivo de tasks múltiplas vezes com diferentes variáveis, enquanto `import_tasks` não pode ser iterado.",
+      "C. Ambos suportam loops da mesma forma.",
+      "D. Nenhum dos dois suporta loops; loops só funcionam em tasks individuais."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Como `include_tasks` é processado em tempo de execução (dinamicamente), ele pode ser usado dentro de um `loop`. Já `import_tasks` é pré-processado antes da execução (estaticamente), portanto não pode ser iterado — é como tentar adicionar um loop a um `import` antes da execução começar."
+  },
+
+  // --- Cap. 7: Inventários ---
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual é a diferença fundamental entre `host_vars` e `group_vars` em inventários Ansible?",
+    opcoes: [
+      "A. `host_vars` define variáveis para sistemas operacionais específicos, `group_vars` para regiões de cloud.",
+      "B. `host_vars` define variáveis que se aplicam a um host específico, enquanto `group_vars` define variáveis que se aplicam a todos os hosts de um grupo.",
+      "C. `host_vars` é para ambientes de produção e `group_vars` para desenvolvimento.",
+      "D. Não há diferença; ambos armazenam variáveis no mesmo nível de precedência."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `host_vars/[hostname].yml` define variáveis exclusivas de um host específico (ex: IP interno, porta de serviço única). `group_vars/[groupname].yml` define variáveis compartilhadas por todos os hosts do grupo (ex: versão do pacote, configuração comum). Host vars sobrescrevem group vars."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "introduz 'Inventários Dinâmicos'. Em qual cenário eles são essencialmente necessários?",
+    opcoes: [
+      "A. Quando você tem menos de 10 servidores estáticos e quer simplificar o inventário.",
+      "B. Em infraestrutura efêmera (como instâncias EC2 ou DigitalOcean) onde os servidores são criados e destruídos frequentemente e um arquivo de inventário estático se tornaria desatualizado rapidamente.",
+      "C. Apenas quando o Ansible é executado no Windows como nó de controle.",
+      "D. Quando os playbooks precisam rodar mais de 1000 forks em paralelo."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Inventários dinâmicos são scripts (Python, PHP, etc.) ou plugins que consultam APIs externas (AWS, GCP, Azure, DigitalOcean) em tempo real para construir o inventário. Em ambientes de cloud onde IPs e instâncias mudam constantemente, um arquivo .ini estático se torna impraticável."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Para criar hosts em tempo de execução do playbook (sem estarem no inventário original), qual módulo especial do Ansible é usado?",
+    opcoes: [
+      "A. inventory_add",
+      "B. add_host",
+      "C. dynamic_host",
+      "D. hosts_register"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `add_host` permite adicionar hosts e grupos dinâmicos durante a execução de um play. Muito útil quando um play cria instâncias de cloud e o play seguinte precisa gerenciar essas instâncias recém-criadas."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O módulo `group_by` do Ansible serve para qual finalidade?",
+    opcoes: [
+      "A. Agrupar múltiplos handlers para execução simultânea.",
+      "B. Criar grupos de inventário dinâmicos durante a execução do playbook com base em fatos dos hosts (ex: criar grupos separados para CentOS e Ubuntu).",
+      "C. Agrupar variáveis de múltiplos arquivos group_vars em um único namespace.",
+      "D. Agrupar tarefas relacionadas para aplicar uma tag comum a todas elas."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O `group_by` cria grupos durante a execução baseando-se em fatos coletados. Exemplo: `group_by: key=os_{{ ansible_facts['distribution'] }}` cria grupos como 'os_CentOS' e 'os_Ubuntu' dinamicamente, permitindo que plays posteriores usem esses grupos para aplicar tasks específicas por SO."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Em um inventário INI, qual é o formato correto para definir que um grupo 'production' é filho (child) de um grupo pai 'datacenter'?",
+    opcoes: [
+      "A. [datacenter > production]",
+      "B. [datacenter:children] production",
+      "C. [production] parent=datacenter",
+      "D. datacenter.production"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Em inventários INI, a sintaxe `[nome_grupo:children]` define quais grupos são filhos desse grupo. Variáveis definidas no grupo pai se aplicam a todos os hosts dos grupos filhos, criando uma hierarquia de inventário."
+  },
+
+  // ==========================================
+  // MÓDULO 2: Jinja2 e Boas práticas de Roles
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "No Ansible, templates Jinja2 (arquivos .j2) são processados pelo módulo `template`. Qual é a principal diferença entre usar `template` e usar `copy` para distribuir um arquivo de configuração?",
+    opcoes: [
+      "A. `copy` é mais seguro pois criptografa o arquivo durante a transferência; `template` não criptografa.",
+      "B. `template` processa o arquivo com o motor Jinja2, substituindo variáveis e expressões antes de enviar ao host remoto; `copy` transfere o arquivo sem modificações.",
+      "C. `copy` só funciona com arquivos binários, `template` apenas com arquivos de texto.",
+      "D. Não há diferença funcional; ambos são intercambiáveis."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `template` renderiza o arquivo .j2 com o Jinja2 antes de copiá-lo: substitui `{{ variavel }}`, processa `{% if %}`, `{% for %}`, etc. O `copy` simplesmente transfere o arquivo byte a byte, sem qualquer processamento ou substituição de variáveis."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "No contexto de Roles, qual é a diferença de precedência entre variáveis definidas em `defaults/main.yml` e variáveis em `vars/main.yml`?",
+    opcoes: [
+      "A. Ambos têm a mesma precedência; a última definição vence.",
+      "B. `vars/main.yml` tem precedência MAIOR que `defaults/main.yml`, tornando difícil para o usuário da role sobrescrever as vars, enquanto defaults são facilmente sobrescrevíveis.",
+      "C. `defaults/main.yml` tem precedência sobre `vars/main.yml` e sobre qualquer outra variável no sistema.",
+      "D. Não existe `vars/main.yml` em roles; apenas `defaults/main.yml` é suportado."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `defaults/` tem a menor precedência de toda a hierarquia do Ansible — são apenas valores padrão que qualquer outra fonte sobrescreve facilmente. `vars/` tem precedência muito mais alta e é difícil de sobrescrever (requer extra_vars ou variáveis de playbook com precedência ainda maior)."
+  },
+
+  // ==========================================
+  // MÓDULO 3: ARQUITETURA DO RED HAT AAP
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "O livro 'Ansible for DevOps' descreve o Ansible Tower (antecessor do Automation Controller do AAP) como sendo essencialmente qual tipo de produto?",
+    opcoes: [
+      "A. Um compilador de playbooks YAML para binários executáveis.",
+      "B. Uma interface web e API REST que adiciona RBAC, agendamento de jobs, inventários dinâmicos e auditoria de execução ao Ansible open source.",
+      "C. Um sistema operacional otimizado para rodar Ansible em containers.",
+      "D. Um substituto completo do Ansible que usa uma linguagem própria de automação."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible Tower (hoje Automation Controller no AAP) adiciona uma camada enterprise sobre o Ansible core: interface web, API RESTful, RBAC granular, agendamento de jobs, inventários dinâmicos, log centralizado e integração com sistemas externos. O controller é a evolução direta do Tower."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "qual é uma das principais vantagens do Ansible Tower em relação a simplesmente executar ansible-playbook manualmente via CLI?",
+    opcoes: [
+      "A. Tower compila os playbooks em bytecode Python para execução mais rápida.",
+      "B. Tower oferece auditoria completa de quem executou o quê e quando, além de centralizar credenciais sem exposição a usuários finais.",
+      "C. Tower elimina a necessidade de um arquivo de inventário, gerando hosts automaticamente via IA.",
+      "D. Tower só funciona com AWS, tornando-o mais seguro para deployments em cloud."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Uma das principais propostas de valor do Tower/Controller é a auditabilidade (log completo de cada execução) e o gerenciamento seguro de credenciais. Os operadores executam playbooks sem nunca ver as senhas — as credenciais ficam armazenadas criptografadas no Controller."
+  },
+
+  // ==========================================
+  // MÓDULO 4: AUTOMATION CONTROLLER
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "O Jenkins CI, abordado como alternativa/complemento ao Tower, é descrito como qual tipo de ferramenta?",
+    opcoes: [
+      "A. Um servidor de inventário dinâmico para Ansible.",
+      "B. Um servidor de automação open source focado em CI/CD, que pode disparar playbooks Ansible como parte de pipelines de build e deploy.",
+      "C. Uma ferramenta de monitoramento de infraestrutura integrada ao Ansible.",
+      "D. Um substituto do Vagrant para criação de ambientes de desenvolvimento."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Jenkins é um servidor de automação CI/CD open source amplamente usado. No Capítulo 11, o livro mostra como configurar o Jenkins para criar 'jobs' que executam playbooks Ansible, integrando automação de infraestrutura aos pipelines de desenvolvimento."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No contexto de RBAC do Ansible Tower/Controller, qual é o papel fundamental do RBAC para equipes de operações?",
+    opcoes: [
+      "A. RBAC no Tower permite que qualquer usuário escreva playbooks em tempo real via interface web.",
+      "B. RBAC permite delegar execução de automação a equipes ou indivíduos específicos, controlando o que cada um pode ver, executar ou modificar, sem expor credenciais ou código-fonte.",
+      "C. RBAC é usado para configurar o banco de dados interno do Tower em diferentes roles (master/slave).",
+      "D. RBAC no Tower define a prioridade de execução entre jobs concorrentes."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O RBAC do Tower/Controller é fundamental para ambientes enterprise: permite que a equipe de segurança dê ao time de NOC apenas o botão 'executar' em jobs específicos, sem acesso ao playbook, inventário ou credenciais subjacentes — aplicando o princípio de menor privilégio."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "Qual módulo Ansible é especialmente útil para testar e depurar playbooks, exibindo o valor de variáveis na saída do terminal durante a execução?",
+    opcoes: [
+      "A. print",
+      "B. log",
+      "C. debug",
+      "D. verbose"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `debug` exibe mensagens e valores de variáveis durante a execução: `debug: msg='O valor é {{ minha_variavel }}'` ou `debug: var=minha_variavel`. Muito usado para inspecionar variáveis registradas ou fatos coletados durante o desenvolvimento."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "O módulo `assert` do Ansible, usado em testes e validações de infraestrutura, serve para:",
+    opcoes: [
+      "A. Declarar variáveis imutáveis (constantes) que não podem ser sobrescritas durante o play.",
+      "B. Verificar se uma condição é verdadeira e falhar o playbook com uma mensagem explicativa se não for, permitindo testes de validação de pré/pós-condições.",
+      "C. Garantir que um handler foi notificado pelo menos uma vez durante o play.",
+      "D. Confirmar a identidade do host remoto via verificação de chave SSH."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `assert` avalia uma condição: `assert: that: result.rc == 0 fail_msg: 'O serviço não iniciou corretamente'`. É fundamental para testes de infraestrutura (Infrastructure as Code testing), garantindo que o estado do sistema está como esperado."
+  },
+
+  // ==========================================
+  // MÓDULO 5: EXECUTION ENVIRONMENTS
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "O livro 'Ansible for DevOps' discute Docker como plataforma de containers. Qual é a característica fundamental que diferencia containers Docker de VMs tradicionais?",
+    opcoes: [
+      "A. Containers Docker têm um kernel próprio e isolamento total de hardware.",
+      "B. Containers compartilham o kernel do SO host, são muito mais leves e iniciam em segundos comparado a VMs que virtualizam hardware completo.",
+      "C. Containers Docker só funcionam em sistemas operacionais Windows.",
+      "D. Containers são mais seguros que VMs por padrão pois são sempre rootless."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Containers compartilham o kernel do SO hospedeiro (isolados via namespaces e cgroups), tornando-os extremamente leves. Uma VM virtualiza hardware completo com seu próprio kernel, consumindo muito mais recursos. Essa leveza é central para o uso de containers em pipelines CI/CD e Execution Environments."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "qual módulo Ansible é usado para interagir com a API do Docker (construir, iniciar, parar containers)?",
+    opcoes: [
+      "A. docker_container",
+      "B. container_manage",
+      "C. docker",
+      "D. podman_container"
+    ],
+    correta: "A",
+    explicacao: "A é a correta. O módulo `docker_container` (da collection community.docker) gerencia containers Docker de forma idempotente: cria, inicia, para, remove containers. O `docker_image` constrói e gerencia imagens. Esses módulos são os padrões para automação de containers com Ansible."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "5.1",
+    pergunta: "Sobre a integração Ansible + Docker descrita no livro, quais afirmações são CORRETAS? (Selecione 2)",
+    opcoes: [
+      "1. Ansible pode usar o Docker como connection plugin, executando tasks dentro de containers ao invés de em hosts SSH.",
+      "2. É possível usar Ansible para provisionar o conteúdo de imagens Docker em vez de (ou em adição a) usar Dockerfiles.",
+      "3. Containers Docker criados pelo Ansible recebem IPs fixos por padrão, sem necessidade de configuração de rede.",
+      "4. O Ansible requer que o daemon Docker esteja rodando como root — uso rootless é impossível."
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O Ansible tem um connection plugin 'docker' que executa tasks diretamente em containers. Além disso, playbooks Ansible podem ser usados para provisionar imagens (alternativa ao Dockerfile), o que é útil quando as mesmas roles já existem para VMs. A 3 e 4 são falsas: redes Docker precisam de configuração e containers rootless são suportados pelo Docker e Podman modernos."
+  },
+
+  // ==========================================
+  // MÓDULO 6: BOAS PRÁTICAS, CI/CD e SEGURANÇA
+  // ==========================================
+
+  // --- Cap. 9: Deployments ---
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "qual diretiva de playbook permite controlar quantos hosts são atualizados por vez, garantindo uma atualização em 'rolling' (ondas) sem derrubar todos os servidores simultaneamente?",
+    opcoes: [
+      "A. max_hosts",
+      "B. batch_size",
+      "C. serial",
+      "D. forks"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. A diretiva `serial` define quantos hosts são processados por vez. `serial: 1` processa um host por vez (mais seguro), `serial: '25%'` atualiza 25% do inventário por rodada. Fundamental para zero-downtime deployments atrás de load balancers."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Para um deploy com zero downtime em servidores atrás de um load balancer, qual sequência de ações o Ansible deve executar?",
+    opcoes: [
+      "A. Atualizar todos os servidores simultaneamente e depois reiniciar o load balancer.",
+      "B. Remover o servidor do load balancer → fazer deploy → rodar testes de validação → reinserir no load balancer. Repetir em rolling.",
+      "C. Parar todos os servidores, atualizar o código, reiniciar todos ao mesmo tempo.",
+      "D. Usar apenas `serial: 0` para que o Ansible gerencie automaticamente a ordem."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A estratégia de zero-downtime com load balancer é: (1) retirar o host do pool do LB, (2) fazer o deploy e testes de integração, (3) recolocar no pool. Com `serial: 1` ou `serial: '25%'`, isso é feito em ondas. O Ansible suporta isso com módulos de LB (HAProxy, AWS ELB, etc.) e o próprio módulo de `uri` para testes."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O estilo de deploy 'Capistrano-style' mencionado é caracterizado por qual estratégia?",
+    opcoes: [
+      "A. Deploy feito apenas durante janelas de manutenção programadas.",
+      "B. Manter múltiplas versões da aplicação em diretórios timestampados no servidor, com um symlink apontando para a versão atual, permitindo rollback instantâneo.",
+      "C. Usar Docker swarm para gerenciar versões de containers automaticamente.",
+      "D. Deploy em uma única máquina de cada vez, sem paralelismo."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. No estilo Capistrano (popularizado pela comunidade Ruby on Rails), múltiplas versões ficam em diretórios com timestamps (ex: releases/20240315120000/). Um symlink `current` aponta para a versão ativa. Rollback é instantâneo: basta apontar o symlink para uma versão anterior sem necessidade de novo deploy."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O deploy 'Blue-Green' descrito consiste em:",
+    opcoes: [
+      "A. Usar dois tipos de servidores (blue para Linux, green para Windows) simultaneamente.",
+      "B. Manter dois ambientes de produção idênticos (blue e green), fazer deploy no ambiente inativo e então redirecionar o tráfego do load balancer do ambiente ativo para o recém-atualizado.",
+      "C. Fazer deploy apenas em servidores com sistema operacional Debian (blue) ou RedHat (green).",
+      "D. Uma estratégia de coloração de logs para facilitar a identificação de erros em produção."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. No Blue-Green deployment, você mantém dois ambientes idênticos. O tráfego vai para o 'blue' enquanto o 'green' recebe o novo deploy e validação. Quando pronto, o LB redireciona o tráfego para o 'green'. O rollback é imediato — apenas troca o LB de volta para 'blue'."
+  },
+
+  // --- Cap. 10: Segurança ---
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "aborda segurança de servidores. Qual é a primeira e mais importante medida de segurança para SSH recomendada?",
+    opcoes: [
+      "A. Alterar a porta SSH de 22 para uma porta aleatória acima de 10000.",
+      "B. Desativar o login root via SSH e usar usuários não-privilegiados com sudo, combinado com autenticação por chave pública.",
+      "C. Instalar fail2ban em todos os servidores como primeira medida.",
+      "D. Configurar SELinux em modo permissivo para evitar bloqueios de SSH."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro recomenda que a primeira medida de segurança é desabilitar o login root direto via SSH (`PermitRootLogin no` no sshd_config) e usar contas não-privilegiadas com sudo + autenticação por chave pública. Isso elimina a superfície de ataque mais comum: força bruta na conta root."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Como o Ansible implementa o princípio de segurança 'least privilege' (menor privilégio) na prática?",
+    opcoes: [
+      "A. Criptografando todo o tráfego SSH com AES-512.",
+      "B. Usando `become: yes` apenas nas tasks que realmente precisam de privilégios de root, em vez de executar todo o playbook como root.",
+      "C. Forçando que todos os usuários usem senhas de 32 caracteres.",
+      "D. Bloqueando todas as portas do firewall exceto a 22."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Aplicar `become: yes` (sudo) apenas nas tasks que necessitam de privilégios de root, em vez de configurar o play inteiro com `become: yes`, é a implementação prática do princípio de menor privilégio. Isso limita o impacto de eventuais vulnerabilidades nos módulos executados."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Para configurar o firewall em sistemas Red Hat/CentOS/Fedora usando Ansible, qual módulo é o recomendado?",
+    opcoes: [
+      "A. iptables",
+      "B. ufw",
+      "C. firewalld",
+      "D. nftables"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `firewalld` do Ansible gerencia o firewall firewalld em sistemas Red Hat/CentOS/Fedora. Para sistemas Debian/Ubuntu, o equivalente é o módulo `ufw`. O livro demonstra ambos no Capítulo 10."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Qual é a abordagem recomendada para lidar com o SELinux em playbooks Ansible?",
+    opcoes: [
+      "A. Sempre desabilitar o SELinux via `setenforce 0` no início dos playbooks para evitar conflitos.",
+      "B. Usar módulos Ansible específicos para SELinux (como `seboolean`, `selinux`) para gerenciar políticas de forma idempotente, em vez de desabilitá-lo.",
+      "C. Configurar o SELinux apenas manualmente; o Ansible não tem módulos para SELinux.",
+      "D. O SELinux é exclusivo do Debian e não relevante para ambientes Red Hat/CentOS."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro recomenda usar os módulos Ansible para SELinux (`seboolean` para toggles, `selinux` para modo enforcing/permissive, `sefcontext` para contextos de arquivo) para gerenciar políticas de forma idempotente. Desabilitar o SELinux é uma má prática de segurança."
+  },
+  {
+    tipo: "truefalse",
+    dominio: "6.1",
+    pergunta: "Sobre boas práticas de segurança em servidores Linux automatizadas com Ansible, quais afirmações são CORRETAS? (Selecione 2)",
+    opcoes: [
+      "1. Manter o sistema operacional e pacotes atualizados (patch management) é uma das práticas de segurança fundamentais que o Ansible pode automatizar.",
+      "2. Fail2ban e soluções similares podem ser instaladas e configuradas via Ansible para bloquear IPs suspeitos após múltiplas tentativas de login falhas.",
+      "3. O Ansible pode gerenciar automaticamente o SELinux sem qualquer conhecimento de políticas SELinux por parte do operador.",
+      "4. Logs de sistema devem ser desativados em produção para reduzir uso de disco, segundo o livro."
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O Ansible pode automatizar patch management (módulo yum/apt com state=latest) e configurar ferramentas de bloqueio como fail2ban. A 3 é parcialmente verdadeira mas não completamente — SELinux pode ser complicado e requer compreensão de políticas. A 4 é completamente falsa — o livro recomenda exatamente o oposto: manter logs e configurar log rotation."
+  },
+
+  // --- Cap. 11: CI/CD e Testing ---
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Qual é o arquivo de configuração usado pelo Travis CI em projetos Ansible?",
+    opcoes: [
+      "A. travis.yml",
+      "B. .travis.yml (na raiz do repositório)",
+      "C. Jenkinsfile",
+      "D. .gitlab-ci.yml"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Travis CI usa o arquivo `.travis.yml` (com ponto inicial, na raiz do repositório GitHub). Ele define a linguagem, versões, scripts de instalação e os comandos de teste. No contexto do livro, é usado para testar automaticamente roles Ansible a cada push no GitHub."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O 'serverspec' é usado para testes funcionais de infraestrutura. Qual linguagem e abordagem ele utiliza?",
+    opcoes: [
+      "A. Python com pytest, testando servidores via API REST.",
+      "B. Ruby com RSpec, testando o estado real dos servidores remotamente via SSH (portas abertas, serviços rodando, arquivos existentes, etc.).",
+      "C. YAML declarativo, similar aos próprios playbooks do Ansible.",
+      "D. JavaScript com Mocha/Jest, conectando via WebSocket."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Serverspec usa a linguagem Ruby e o framework RSpec para escrever testes que verificam o estado real de servidores remotos. Ele testa coisas como: 'o port 80 está aberto?', 'o arquivo /etc/nginx/nginx.conf existe?', 'o serviço nginx está rodando?'. É uma forma de 'Test-Driven Infrastructure'."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Para verificar a sintaxe de um playbook Ansible sem executá-lo, qual comando é usado?",
+    opcoes: [
+      "A. ansible-playbook playbook.yml --validate",
+      "B. ansible-playbook playbook.yml --syntax-check",
+      "C. ansible-lint playbook.yml --syntax-only",
+      "D. ansible playbook.yml --check-syntax"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `ansible-playbook --syntax-check` analisa o YAML e a estrutura do playbook sem executar nenhuma task nos hosts. É a primeira verificação recomendada em pipelines CI/CD antes de executar o playbook em ambientes reais."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O Apêndice B do livro ('Ansible Best Practices and Conventions') recomenda que ao usar mais de 5 servidores em um playbook, você deve ajustar qual configuração para melhorar o desempenho?",
+    opcoes: [
+      "A. Aumentar o `timeout` do SSH para evitar timeouts em redes lentas.",
+      "B. Especificar `--forks` (padrão é 5) para aumentar a paralelização e processar mais hosts simultaneamente.",
+      "C. Ativar o `gather_facts: false` para todos os plays.",
+      "D. Usar `serial: 100%` para garantir que todos os hosts sejam processados de uma vez."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Ansible executa tasks em paralelo em até `forks` hosts simultaneamente (padrão: 5). Para inventários maiores, aumentar `--forks 20` ou configurar `forks = 20` no ansible.cfg reduz drasticamente o tempo de execução. O Apêndice B do livro cita isso explicitamente."
+  },
+
+  // ==========================================
+  // MÓDULO 1: QUESTÕES AVANÇADAS ADICIONAIS
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "qual módulo permite que uma task pause a execução do playbook até que uma condição seja atendida (ex: porta TCP aberta, arquivo existente, URL respondendo)?",
+    opcoes: [
+      "A. pause",
+      "B. wait_for",
+      "C. delay",
+      "D. wait_until"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `wait_for` é extremamente útil em deployments para esperar que um serviço suba: `wait_for: host=localhost port=8080 delay=5 timeout=60`. Ele tenta a condição a cada `delay` segundos até `timeout`. Diferente do `pause` que apenas espera um tempo fixo ou input humano."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "A diretiva `delegate_to` no Ansible serve para qual propósito?",
+    opcoes: [
+      "A. Delegar a autenticação SSH para um servidor intermediário (bastion host).",
+      "B. Executar uma task específica em um host diferente do host atual do inventário (ex: rodar uma task no host local enquanto o play está iterando sobre servidores remotos).",
+      "C. Passar as variáveis de um host para outro durante a execução.",
+      "D. Distribuir a carga de processamento do Ansible entre múltiplos nós de controle."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `delegate_to` redireciona a execução de uma task específica para um host diferente. Exemplo clássico: durante a atualização de um servidor web, delegar a task de remover o servidor do load balancer (HAProxy) para o próprio servidor de LB, enquanto o loop itera nos webservers."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para executar tasks apenas no nó de controle local (onde o ansible-playbook está rodando) sem SSH, qual configuração simplificada pode ser usada em vez de `delegate_to: localhost`?",
+    opcoes: [
+      "A. `connection: none`",
+      "B. `local_action: [módulo]` ou `hosts: localhost` com `connection: local`",
+      "C. `run_locally: yes`",
+      "D. `ansible_host: 127.0.0.1` no inventário"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `local_action` é um atalho para `delegate_to: localhost`. Alternativamente, um play com `hosts: localhost` e `connection: local` roda inteiramente no nó de controle sem SSH. Útil para criar tickets, enviar e-mails ou interagir com APIs durante um playbook."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O `vars_prompt` do Ansible é usado para:",
+    opcoes: [
+      "A. Gerar automaticamente senhas seguras aleatórias para variáveis de ambiente.",
+      "B. Solicitar ao operador que forneça valores de variáveis interativamente via terminal antes do play iniciar.",
+      "C. Exibir o valor atual de todas as variáveis no início de cada task.",
+      "D. Importar variáveis de um arquivo de prompt de texto (.env)."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `vars_prompt` pede inputs do operador antes de executar o play. Exemplo: pedir o número de versão do deploy ou uma senha de confirmação. ATENÇÃO: deve ser evitado em pipelines CI/CD não interativos, pois vai congelar a execução aguardando input."
+  },
+
+  // ==========================================
+  // MÓDULO 2: QUESTÕES AVANÇADAS DE JINJA2
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "No Ansible, como você itera sobre uma lista de items usando loops modernos (Ansible 2.5+)?",
+    opcoes: [
+      "A. `with_items: lista`",
+      "B. `loop: lista`",
+      "C. `foreach: lista`",
+      "D. `iterate: lista`"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Ansible 2.5+ introduziu `loop:` como substituto preferido para `with_items:`. Dentro do loop, o item atual é acessado via `{{ item }}`. O `with_items` ainda funciona mas está em processo de deprecação. `loop:` é mais consistente e suporta filtros como `loop_control`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Em Jinja2 (usado em templates e playbooks Ansible), qual é a sintaxe correta para iterar sobre um dicionário e acessar chave e valor simultaneamente?",
+    opcoes: [
+      "A. `{% for key, value in dict %}...{% endfor %}`",
+      "B. `{% for key, value in dict.items() %}...{% endfor %}`",
+      "C. `{% foreach key: value in dict %}...{% endforeach %}`",
+      "D. `{% loop key=k value=v in dict %}...{% endloop %}`"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Em Jinja2, `dict.items()` retorna pares (chave, valor) que podem ser desempacotados na sintaxe `for k, v in dict.items()`. Essa é a forma Python/Jinja2 padrão de iterar sobre dicionários em templates Ansible."
+  },
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "Qual filtro Jinja2 é usado no Ansible para transformar uma string em maiúsculas?",
+    opcoes: [
+      "A. `{{ var | capitalize }}`",
+      "B. `{{ var | upper }}`",
+      "C. `{{ var | uppercase }}`",
+      "D. `{{ var.toUpper() }}`"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O filtro `upper` converte a string para maiúsculas: `{{ 'hello' | upper }}` resulta em `HELLO`. O `capitalize` apenas coloca a primeira letra em maiúsculo. Outros filtros úteis: `lower`, `title`, `trim`, `replace`, `split`, `join`."
+  },
+
+  // ==========================================
+  // MÓDULO 6: QUESTÕES DE BOAS PRÁTICAS
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O Apêndice B do livro ('Best Practices') recomenda o uso extensivo da diretiva `name:` em cada task. Por qual motivo?",
+    opcoes: [
+      "A. A diretiva `name:` é obrigatória; o Ansible falha sem ela.",
+      "B. Fornece documentação inline legível tanto no output da execução quanto para outros membros da equipe que leem o playbook, tornando-o auto-documentado.",
+      "C. Melhora o desempenho pois o Ansible usa o `name` como chave de cache para tasks já executadas.",
+      "D. O `name:` é usado pelo Ansible Vault para criptografar tasks sensíveis seletivamente."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Embora `name:` seja opcional, o livro enfatiza fortemente seu uso para auto-documentação. Uma task com `name: 'Ensure Apache is installed and running on port 80'` é infinitamente mais útil no output de execução e na revisão de código do que uma task anônima."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Segundo o Apêndice B do livro, qual é a abordagem recomendada para organizar playbooks complexos que gerenciam múltiplos tipos de servidores?",
+    opcoes: [
+      "A. Colocar tudo em um único playbook.yml gigante para facilitar a execução.",
+      "B. Separar em roles reutilizáveis para cada componente e usar um playbook 'site.yml' principal que inclui as roles específicas para cada grupo de servidores.",
+      "C. Criar um script shell separado para cada servidor e chamar o ansible via subprocess.",
+      "D. Usar apenas comandos ad-hoc e evitar playbooks para reduzir a complexidade."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O padrão recomendado é: um `site.yml` principal que inclui playbooks por grupo (`webservers.yml`, `dbservers.yml`), cada um referenciando roles reutilizáveis. Isso torna o código organizado, testável e fácil de manter — a essência da 'Infrastructure as Code'."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "O livro 'Ansible for DevOps' menciona que, em ambientes com mais de 5 servidores, deve-se especificar o parâmetro `--forks`. Qual é o valor padrão de forks do Ansible e o que ele significa?",
+    opcoes: [
+      "A. Padrão: 1; significa que o Ansible processa um host por vez (totalmente sequencial).",
+      "B. Padrão: 5; significa que o Ansible processa no máximo 5 hosts em paralelo simultaneamente.",
+      "C. Padrão: 50; significa que o Ansible abre até 50 conexões SSH simultâneas por host.",
+      "D. Padrão: ilimitado; o Ansible processa todos os hosts do inventário ao mesmo tempo."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O valor padrão de `forks` no Ansible é 5, significando que no máximo 5 hosts são processados paralelamente por vez. Para inventários maiores, aumentar esse valor (ex: `forks = 20` no ansible.cfg ou `--forks 20` na CLI) reduz significativamente o tempo total de execução."
+  },
+  {
+    tipo: "multiple",
+    dominio: "6.1",
+    pergunta: "Qual é a principal diferença entre `ansible-lint` e `--syntax-check` do ansible-playbook?",
+    opcoes: [
+      "A. São equivalentes; ambos fazem a mesma validação.",
+      "B. `--syntax-check` verifica apenas a sintaxe YAML básica do playbook, enquanto `ansible-lint` aplica regras de boas práticas, detectando anti-patterns como tasks sem `name`, use de comandos shell quando existe módulo nativo, etc.",
+      "C. `ansible-lint` verifica sintaxe YAML e `--syntax-check` verifica lógica de negócio.",
+      "D. `ansible-lint` só funciona com roles do Galaxy, enquanto `--syntax-check` funciona com qualquer playbook."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `--syntax-check` é uma verificação estrutural básica de YAML/Ansible. O `ansible-lint` vai além: aplica um conjunto de regras de qualidade e boas práticas — como uso de módulos nativos em vez de shell/command, tasks com nome, caminhos absolutos, etc. Essencial em pipelines CI/CD."
+  },
+
+  // ==========================================
+  // MÓDULO 3: AAP e EDA adicionais
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "No contexto de Ansible e Docker, o que é um 'Data Volume Container'?",
+    opcoes: [
+      "A. Um container especial que roda o banco de dados do Ansible Tower.",
+      "B. Um container cuja única função é fornecer volumes de armazenamento persistente para outros containers, mantendo os dados separados do ciclo de vida do container da aplicação.",
+      "C. Um container que comprime e faz backup automático de dados para S3.",
+      "D. Um container com o EE (Execution Environment) do AAP pré-configurado."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O padrão 'Data Volume Container' (descrito no Cap. 8) cria um container dedicado apenas para armazenar dados persistentes. Outros containers montam os volumes desse container de dados. Isso separa os dados do ciclo de vida da aplicação — se o container da app for recriado, os dados permanecem no volume container."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "(Ansible Cookbooks), qual stack de logging é configurada com Ansible para centralizar e visualizar logs de múltiplos servidores?",
+    opcoes: [
+      "A. TICK Stack (Telegraf, InfluxDB, Chronograf, Kapacitor)",
+      "B. ELK Stack (Elasticsearch, Logstash, Kibana)",
+      "C. Prometheus + Grafana",
+      "D. Splunk Enterprise"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Capítulo 8 tem uma seção dedicada ao 'ELK Logging with Ansible', demonstrando como configurar o Elasticsearch (armazenamento de logs), Logstash (processamento/ingestão) e Kibana (visualização) com playbooks Ansible. O Logstash/Filebeat é configurado nos servidores de aplicação para encaminhar logs."
+  },
+  {
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "demonstra a configuração do GlusterFS com Ansible. GlusterFS é classificado como qual tipo de tecnologia?",
+    opcoes: [
+      "A. Sistema de filas de mensagens distribuído (MQ).",
+      "B. Sistema de arquivos distribuído (Distributed File System) que agrega armazenamento de múltiplos servidores em um único namespace.",
+      "C. Banco de dados NoSQL distribuído baseado em key-value.",
+      "D. Ferramenta de orquestração de containers."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. GlusterFS é um sistema de arquivos distribuído que une o armazenamento de múltiplos servidores (bricks) em um único volume. O Capítulo 8 mostra como automatizar sua instalação e configuração com Ansible, incluindo a criação de volumes replicados para alta disponibilidade."
+  },
+
+  // ==========================================
+  // MÓDULO 4: QUESTÕES AVANÇADAS CONTROLLER
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "O módulo `uri` do Ansible serve para qual finalidade nos pipelines de deploy?",
+    opcoes: [
+      "A. Gerenciar registros DNS (URI = Uniform Resource Identifier para serviços DNS).",
+      "B. Fazer requisições HTTP/HTTPS para testar se uma aplicação está respondendo corretamente após o deploy, podendo validar status codes e conteúdo da resposta.",
+      "C. Autenticar o Ansible no Automation Controller via API REST.",
+      "D. Baixar arquivos binários de URLs externas para instalação."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `uri` faz requisições HTTP/HTTPS e pode validar a resposta: `uri: url=http://localhost/health status_code=200`. É excelente para smoke tests pós-deploy — verificar se a aplicação está saudável antes de reintegrá-la ao load balancer."
+  },
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No contexto de inventários dinâmicos com AWS, qual arquivo Python é mencionado como o plugin de inventário dinâmico para EC2?",
+    opcoes: [
+      "A. aws_inventory.py",
+      "B. ec2.py (script de inventário dinâmico para Amazon EC2)",
+      "C. boto3_inventory.py",
+      "D. cloud_inventory.py"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O livro menciona o `ec2.py`, um script Python (que usa a biblioteca Boto) mantido pela comunidade Ansible para criar inventários dinâmicos a partir de instâncias EC2 da AWS. Ele consulta a API da AWS e retorna os hosts organizados por tags, grupos de segurança, região, etc."
+  },
+
+  // ==========================================
+  // MÓDULO 5: EEs e Containers avançados
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "No contexto de provisionamento Mac OS X com Ansible, qual gerenciador de pacotes é automatizado com o módulo `homebrew`?",
+    opcoes: [
+      "A. MacPorts",
+      "B. Fink",
+      "C. Homebrew (brew)",
+      "D. apt-get (rodando via Rosetta)"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O Capítulo 8 mostra como usar o módulo `homebrew` do Ansible para gerenciar pacotes no macOS via Homebrew. O módulo pode instalar, atualizar e remover fórmulas (`brew install`), além de gerenciar casks com `homebrew_cask`. Isso permite 'Infrastructure as Code' para workstations de desenvolvedor."
+  },
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "qual módulo Ansible é usado para construir imagens Docker a partir de um Dockerfile ou de um playbook Ansible?",
+    opcoes: [
+      "A. docker_build",
+      "B. docker_image",
+      "C. container_build",
+      "D. podman_build"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O módulo `docker_image` (da collection community.docker) constrói imagens Docker: `docker_image: name=myapp path=/path/to/dockerfile state=present`. Ele usa o Docker daemon local para construir a imagem, suportando tags, push para registries e forçar rebuild."
+  },
+
+  // ==========================================
+  // MÓDULO 1: QUESTÕES FINAIS BÁSICAS E MÉDIAS
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual módulo Ansible é equivalente ao comando `apt-get install` em sistemas Debian/Ubuntu?",
+    opcoes: [
+      "A. package",
+      "B. yum",
+      "C. apt",
+      "D. dpkg"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O módulo `apt` gerencia pacotes em sistemas baseados em Debian/Ubuntu: `apt: name=nginx state=present`. O módulo `yum` é para sistemas Red Hat/CentOS. Existe também o módulo `package` que é agnóstico de distro, usando o gerenciador nativo do sistema."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Para verificar rapidamente se todos os hosts de um grupo estão acessíveis (verificação de conectividade) sem fazer alterações, qual é o comando ad-hoc mais simples?",
+    opcoes: [
+      "A. ansible all -m command -a 'hostname'",
+      "B. ansible all -m ping",
+      "C. ansible all --check-connection",
+      "D. ansible all -m test_connection"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `ansible all -m ping` é o 'hello world' do Ansible e o teste de conectividade mais básico. O módulo `ping` não envia pacotes ICMP — ele verifica se o Ansible consegue estabelecer a conexão SSH, autenticar e executar Python no host remoto. Resposta esperada: `pong`."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "Qual é a extensão padrão dos arquivos de template Jinja2 usados com o módulo `template` do Ansible?",
+    opcoes: [
+      "A. .tmpl",
+      "B. .ansible",
+      "C. .j2",
+      "D. .tpl"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Arquivos de template Jinja2 no Ansible usam a extensão `.j2` por convenção (ex: `nginx.conf.j2`, `my.cnf.j2`). O módulo `template` processa esses arquivos, substituindo variáveis Jinja2 (`{{ variavel }}`), antes de copiá-los para o host remoto."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "O que acontece se um playbook é executado duas vezes seguidas em um sistema já configurado, dado o princípio de idempotência do Ansible?",
+    opcoes: [
+      "A. O Ansible detecta que já foi executado e se recusa a rodar novamente.",
+      "B. O segundo run falha com erro 'Already configured'.",
+      "C. O segundo run executa sem erros e reporta 'changed=0' — nenhuma alteração foi necessária pois o sistema já está no estado desejado.",
+      "D. O Ansible reinstala todos os pacotes e reinicia todos os serviços para garantir a configuração."
+    ],
+    correta: "C",
+    explicacao: "C é a correta. Idempotência é um princípio central do Ansible: executar o mesmo playbook N vezes tem o mesmo efeito que executar uma vez. Se o sistema já está no estado desejado, o Ansible detecta isso e reporta `ok` (não `changed`) para cada task, sem fazer alterações desnecessárias."
+  },
+  {
+    tipo: "multiple",
+    dominio: "1.1",
+    pergunta: "No inventário Ansible, como você define uma variável de host inline (na mesma linha do host) para especificar um usuário SSH diferente do padrão?",
+    opcoes: [
+      "A. web01.example.com user=deploy",
+      "B. web01.example.com ansible_user=deploy",
+      "C. web01.example.com --user deploy",
+      "D. web01.example.com | user: deploy"
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Variáveis de host no inventário INI são definidas após o hostname: `web01.example.com ansible_user=deploy ansible_port=2222`. As variáveis especiais do Ansible começam com `ansible_` (ex: `ansible_user`, `ansible_port`, `ansible_ssh_private_key_file`, `ansible_python_interpreter`)."
+  }
+  ,{
+    // ==========================================
+    // QUESTÕES ADICIONAIS — MÓDULO 3: AAP
+    // ==========================================
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "No AAP moderno, o 'Automation Mesh' resolve qual problema fundamental que existia na arquitetura do Ansible Tower legado?",
+    opcoes: [
+      "A. A falta de suporte a playbooks YAML na interface web do Tower.",
+      "B. A dependência de uma única conexão SSH direta do nó de controle para cada host gerenciado, criando problemas em ambientes com firewalls, múltiplos datacenters e redes segmentadas.",
+      "C. A impossibilidade de executar roles do Ansible Galaxy no Tower.",
+      "D. A ausência de suporte a inventários estáticos no formato INI."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Automation Mesh introduz uma malha de comunicação baseada no protocolo Receptor (TCP) entre nós do tipo Controller, Hybrid, Execution e Hop. Isso resolve a limitação do Tower legado onde o Control Plane precisava de acesso SSH direto a todos os hosts — impraticável em ambientes corporativos com DMZs, VPNs e múltiplas regiões."
+  },{
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "No Event-Driven Ansible (EDA), o que é um 'Rulebook' e qual é sua estrutura básica?",
+    opcoes: [
+      "A. Um rulebook é um playbook especial que define regras de RBAC para o Controller.",
+      "B. Um rulebook é um arquivo YAML que define fontes de eventos (sources), condições (rules/conditions) e ações (actions) — como executar um playbook — a serem tomadas quando um evento corresponde às condições definidas.",
+      "C. Um rulebook é um documento de conformidade que lista as regras de segurança aplicadas pelo Ansible Vault.",
+      "D. Um rulebook é um arquivo JSON que configura os webhooks do Controller para receber alertas externos."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O Rulebook é o coração do EDA: define `sources` (de onde vêm os eventos, ex: webhook, Kafka), `rules` com `conditions` (qual evento disparar) e `actions` (ex: `run_playbook`, `run_job_template` no Controller). Quando a condição é atendida, a ação é executada automaticamente sem intervenção humana."
+  },{
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "O que diferencia um 'Execution Node' de um 'Control Node' na arquitetura do Automation Mesh do AAP?",
+    opcoes: [
+      "A. Execution Nodes armazenam o banco de dados PostgreSQL; Control Nodes executam os jobs.",
+      "B. Control Nodes gerenciam a lógica do Controller (UI, API, agendamento) enquanto Execution Nodes executam efetivamente os jobs (rodam os Execution Environments/containers com ansible-runner).",
+      "C. Não há diferença funcional; os termos são intercambiáveis na documentação Red Hat.",
+      "D. Execution Nodes são usados apenas para inventários dinâmicos; Control Nodes para playbooks estáticos."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. A separação Control/Execution é central no AAP 2.x: Control Nodes rodam os serviços do Controller (API REST, UI, scheduler, banco de dados). Execution Nodes são nós dedicados à execução dos jobs em Execution Environments (containers), podendo estar em regiões remotas. Isso permite escalar a capacidade de execução independentemente do Control Plane."
+  },{
+    tipo: "multiple",
+    dominio: "3.1",
+    pergunta: "Qual protocolo de comunicação é utilizado pelo Automation Mesh do AAP para conectar os nós da malha (Control, Execution e Hop Nodes)?",
+    opcoes: [
+      "A. SSH (porta 22)",
+      "B. HTTP/2 (porta 8443)",
+      "C. Receptor — um protocolo de transporte baseado em TCP/mTLS (porta 27199 por padrão)",
+      "D. gRPC sobre TLS (porta 9443)"
+    ],
+    correta: "C",
+    explicacao: "C é a correta. O Automation Mesh usa o projeto open source 'Receptor' como protocolo de comunicação. O Receptor cria túneis mTLS (mutual TLS) entre os nós da malha, usando a porta 27199 por padrão. Isso substitui o SSH direto e permite roteamento sofisticado de tráfego através de firewalls e DMZs usando Hop Nodes como proxies."
+  },
+  // ==========================================
+  // QUESTÕES ADICIONAIS — MÓDULO 4: CONTROLLER
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No Automation Controller, o que é um 'Workflow Job Template' e como ele difere de um 'Job Template' comum?",
+    opcoes: [
+      "A. Um Workflow Template executa um único playbook mais rápido usando múltiplos forks.",
+      "B. Um Workflow Template orquestra múltiplos Job Templates em sequência ou em paralelo, com lógica condicional de sucesso/falha entre eles, criando pipelines de automação complexos.",
+      "C. Um Workflow Template é exclusivo para deployments em ambientes de cloud (AWS, Azure, GCP).",
+      "D. Um Workflow Template é um Job Template com Survey obrigatório ativado."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Workflow Job Templates conectam múltiplos Job Templates em um grafo de execução visual: `A -> (sucesso) -> B -> (falha) -> C (rollback)`. Cada nó pode ser um Job Template, outro Workflow, uma aprovação manual ou uma sincronização de inventário. São essenciais para pipelines CI/CD complexos no Controller."
+  },{
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "No Controller, o que são 'Execution Environments' do ponto de vista de um usuário que cria Job Templates?",
+    opcoes: [
+      "A. São as regiões de cloud onde os jobs serão executados (AWS us-east-1, Azure eastus, etc.).",
+      "B. São imagens de container pré-construídas que contêm o Ansible Core, collections, dependências Python e de sistema necessárias para executar os playbooks, selecionadas no Job Template.",
+      "C. São ambientes virtuais Python (venv) armazenados no servidor do Controller.",
+      "D. São janelas de tempo (manutenção) durante as quais os jobs podem ser executados."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Do ponto de vista do usuário no Controller, o Execution Environment (EE) é simplesmente a imagem de container selecionada no Job Template. O Controller instrui o Execution Node a puxar essa imagem e executar o ansible-runner dentro do container isolado, garantindo reprodutibilidade independentemente do SO do nó de execução."
+  },{
+    tipo: "multiple",
+    dominio: "4.1",
+    pergunta: "O 'Smart Inventory' do Automation Controller funciona de qual forma?",
+    opcoes: [
+      "A. Usa IA/ML para predizer quais hosts precisarão de manutenção preventiva.",
+      "B. Cria um inventário virtual dinâmico que filtra hosts de outros inventários existentes usando uma expressão de busca (filter expression), sem duplicar dados.",
+      "C. Sincroniza automaticamente o inventário com o CMDB via SNMP a cada 5 minutos.",
+      "D. Usa o módulo setup para catalogar automaticamente todos os fatos de todos os hosts e criar grupos dinamicamente."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Smart Inventories são filtros sobre inventários existentes no Controller. Exemplo: `ansible_facts.os_family == 'RedHat' AND hostvars.region == 'us-east-1'` cria um inventário virtual com apenas os hosts RedHat na região us-east-1, sem precisar criar um inventário separado. Os dados são mantidos nos inventários de origem."
+  },{
+    tipo: "truefalse",
+    dominio: "4.1",
+    pergunta: "Sobre Credenciais (Credentials) no Automation Controller, quais afirmações são CORRETAS? (Selecione 2)",
+    opcoes: [
+      "1. As credenciais são armazenadas criptografadas no banco de dados do Controller e os usuários com permissão 'Use' podem utilizá-las em jobs sem nunca ver os valores em texto plano.",
+      "2. É possível criar 'Custom Credential Types' para integrar com gerenciadores de segredos externos como HashiCorp Vault ou CyberArk.",
+      "3. Credenciais podem ser exportadas em texto plano via API REST para integração com sistemas externos.",
+      "4. O Controller suporta apenas credenciais do tipo SSH; outros tipos (AWS, Azure, Vault) precisam ser gerenciados externamente."
+    ],
+    correta: [1, 2],
+    explicacao: "1 e 2 são corretas. O Controller criptografa todas as credenciais (AES-256) e usa um mecanismo que jamais expõe os valores em texto plano mesmo para administradores. Custom Credential Types permitem criar integrações com qualquer sistema de gerenciamento de segredos usando Jinja2 para injetar variáveis. A 3 é falsa (segurança fundamental) e a 4 é falsa (suporta dezenas de tipos nativos: AWS, Azure, GCP, OpenShift, VMware, etc.)."
+  },
+  // ==========================================
+  // QUESTÕES ADICIONAIS — MÓDULO 5: EEs
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "O arquivo `execution-environment.yml` do ansible-builder v3 possui uma chave `additional_build_steps`. Para que serve essa chave?",
+    opcoes: [
+      "A. Define steps adicionais de CI/CD no pipeline do GitLab/GitHub Actions.",
+      "B. Permite adicionar comandos customizados (RUN, COPY, ENV) nas fases prepend ou append do Containerfile/Dockerfile gerado, para instalar dependências não gerenciadas pelo bindep ou pip.",
+      "C. Lista as collections adicionais além das do requirements.yml que devem ser incluídas.",
+      "D. Define os steps de validação de segurança (DAST/SAST) que rodam após a construção da imagem."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `additional_build_steps` permite injetar comandos arbitrários no Containerfile gerado pelo ansible-builder. Exemplo: instalar uma ferramenta de linha de comando via `RUN curl ... | bash` no `prepend_final` (antes das collections) ou configurar variáveis de ambiente no `append_final`. Útil para dependências que não estão disponíveis via pip ou bindep."
+  },{
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "Qual é a principal diferença entre `ansible-navigator run` e `ansible-playbook` para executar um playbook?",
+    opcoes: [
+      "A. `ansible-navigator run` só funciona em sistemas Windows, enquanto `ansible-playbook` é multiplataforma.",
+      "B. `ansible-navigator run` executa o playbook dentro de um Execution Environment (container), enquanto `ansible-playbook` usa o ambiente Python local do nó de controle.",
+      "C. `ansible-navigator run` não suporta inventários dinâmicos; `ansible-playbook` sim.",
+      "D. `ansible-navigator run` executa o playbook 10x mais rápido graças a otimizações internas de cache."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Essa é a diferença fundamental: `ansible-navigator` usa Podman/Docker para puxar e executar o Execution Environment especificado, rodando o ansible-runner dentro do container. Isso garante que o ambiente de execução local seja idêntico ao do Controller no AAP, eliminando o 'works on my machine'."
+  },{
+    tipo: "multiple",
+    dominio: "5.1",
+    pergunta: "O `bindep.txt` referenciado no `execution-environment.yml` do ansible-builder serve para instalar qual tipo de dependência?",
+    opcoes: [
+      "A. Dependências Python (pacotes pip) para as collections Ansible.",
+      "B. Dependências de sistema operacional (pacotes RPM/DEB) como bibliotecas C, ferramentas de linha de comando (ex: git, rsync, libxml2-devel) necessárias para as collections.",
+      "C. Dependências de roles do Ansible Galaxy.",
+      "D. Dependências de imagens Docker pai (FROM) para a construção da imagem EE."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. O `bindep.txt` lista dependências de pacotes do sistema operacional (não Python). O `bindep` tool detecta o SO da imagem base e instala os pacotes corretos (RPM para RHEL, DEB para Debian). Exemplo: `libxml2-devel [platform:rpm]` instala o pacote no caso de sistemas RPM. Muito usado quando uma collection Python precisa compilar extensões C."
+  },
+  // ==========================================
+  // QUESTÕES ADICIONAIS — MÓDULO 2
+  // ==========================================
+  {
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O que é o 'Lookup Plugin' no Ansible e como ele difere de um módulo comum?",
+    opcoes: [
+      "A. Lookup plugins são iguais a módulos, mas executados nos hosts remotos.",
+      "B. Lookup plugins são executados no nó de controle (local) e retornam dados para uso em variáveis do playbook — como ler um arquivo local, consultar um banco de dados ou buscar um segredo no Vault.",
+      "C. Lookup plugins são usados exclusivamente para buscar fatos dos hosts remotos (equivalente ao módulo setup).",
+      "D. Lookup plugins são uma forma depreciada de includes que foi substituída por import_tasks."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. Lookup plugins rodam no nó de controle e retornam dados que podem ser usados em variáveis: `{{ lookup('file', '/etc/os-release') }}` lê um arquivo local, `{{ lookup('env', 'HOME') }}` busca uma variável de ambiente local, `{{ lookup('password', '/dev/null length=16') }}` gera uma senha aleatória. São executados antes que a task vá para o host remoto."
+  },{
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "A diretiva `no_log: true` em uma task do Ansible é usada para:",
+    opcoes: [
+      "A. Desabilitar o log de execução do ansible-playbook para o arquivo de log do sistema.",
+      "B. Suprimir a exibição dos parâmetros e resultado de uma task no output do playbook, protegendo dados sensíveis (senhas, tokens) de aparecerem em logs de CI/CD ou terminais.",
+      "C. Fazer a task rodar em modo silencioso sem qualquer output, mesmo em caso de erro.",
+      "D. Indicar que a task não deve gerar entradas no log de auditoria do Automation Controller."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `no_log: true` mascara a saída de uma task específica no output do ansible-playbook — fundamental quando a task usa senhas ou tokens como parâmetros (ex: `uri` com headers de autenticação, `user` com password). Sem isso, a senha apareceria em texto plano no log do terminal e do Controller."
+  },{
+    tipo: "multiple",
+    dominio: "2.1",
+    pergunta: "O que é o `ansible-vault encrypt_string` e em que cenário ele é preferível ao `ansible-vault encrypt`?",
+    opcoes: [
+      "A. `encrypt_string` criptografa um arquivo inteiro; `encrypt` criptografa apenas strings individuais.",
+      "B. `encrypt_string` criptografa apenas um valor de string inline, permitindo incluí-lo diretamente em um arquivo YAML não-criptografado junto com variáveis em texto plano — mais granular que criptografar o arquivo inteiro.",
+      "C. `encrypt_string` usa criptografia RSA enquanto `encrypt` usa AES-256.",
+      "D. Não há diferença prática; ambos produzem o mesmo resultado."
+    ],
+    correta: "B",
+    explicacao: "B é a correta. `encrypt_string` gera um bloco `!vault |` que pode ser inserido como valor de uma variável específica em qualquer arquivo YAML: `db_password: !vault | $ANSIBLE_VAULT;1.1;AES256...`. Isso é mais conveniente que criptografar o arquivo inteiro quando apenas um valor é sensível e você quer manter os outros legíveis."
+  }
+];
+
+        // Lógica Principal de UI e Estado (Idêntica ao template, mas isolada para Ansible)
+        const configPage = document.getElementById("config-page");
+        const quizPage = document.getElementById("quiz-page");
+        const resultsPage = document.getElementById("results-page");
+        const bookmarksPage = document.getElementById("bookmarks-page");
+        const slider = document.getElementById("questions-slider");
+        const sliderValue = document.getElementById("slider-value");
+        const startBtn = document.getElementById("start-btn");
+        const continueBtn = document.getElementById("continue-btn");
+        const viewBookmarksBtn = document.getElementById("view-bookmarks-btn");
+        const bookmarkCount = document.getElementById("bookmark-count");
+        const backFromBookmarksBtn = document.getElementById("back-from-bookmarks-btn");
+        const quizStats = document.getElementById("quiz-stats");
+        const questionProgressDisplay = document.getElementById("question-progress-display");
+        const timerDisplay = document.getElementById("timer-display");
+        const scoreDisplay = document.getElementById("score-display");
+        const globalResetBtn = document.getElementById("global-reset-btn");
+        const questionDomain = document.getElementById("question-domain");
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const explanationCard = document.getElementById("explanation-card");
+        const submitBtn = document.getElementById("submit-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const bookmarkBtn = document.getElementById("bookmark-btn");
+        const bookmarksList = document.getElementById("bookmarks-list");
+        const resultsSummary = document.getElementById("results-summary");
+        const domainStatsDiv = document.getElementById("domain-stats");
+        const wrongAnswersList = document.getElementById("wrong-answers-list");
+        const restartFromResultsBtn = document.getElementById("restart-from-results-btn");
+        const themeToggle = document.getElementById("theme-toggle");
+
+        // Modal de abandono
+        const abandonOverlay   = document.getElementById("abandon-modal-overlay");
+        const abandonCancelBtn = document.getElementById("abandon-cancel-btn");
+        const abandonConfirmBtn= document.getElementById("abandon-confirm-btn");
+
+        let quizState = {};
+        let timerInterval;
+        let permanentBookmarks = [];
+        const STORAGE_KEY   = "ansibleQuizState";
+        const BOOKMARKS_KEY = "ansibleQuizBookmarks";
+
+        // ── Dark Mode ──────────────────────────────────────────────
+        const savedTheme = localStorage.getItem("rh-theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeButton(savedTheme);
+
+        function updateThemeButton(theme) {
+          themeToggle.textContent = theme === "dark" ? "☀️ Claro" : "🌙 Escuro";
+        }
+        themeToggle.addEventListener("click", () => {
+          const current  = document.documentElement.getAttribute("data-theme");
+          const newTheme = current === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", newTheme);
+          localStorage.setItem("rh-theme", newTheme);
+          updateThemeButton(newTheme);
+        });
+
+        // ── Modo / Domínio ─────────────────────────────────────────
+        document.querySelectorAll(".mode-option").forEach((option) => {
+          option.addEventListener("click", () => {
+            document.querySelectorAll(".mode-option").forEach((o) => o.classList.remove("selected"));
+            option.classList.add("selected");
+            option.querySelector("input").checked = true;
+          });
+        });
+
+        const allDomainsCheckbox = document.querySelector('input[value="all"]');
+        const domainCheckboxes   = document.querySelectorAll(".domain-check");
+
+        allDomainsCheckbox.addEventListener("change", (e) => {
+          domainCheckboxes.forEach((cb) => (cb.checked = e.target.checked));
+        });
+        domainCheckboxes.forEach((cb) => {
+          cb.addEventListener("change", () => {
+            allDomainsCheckbox.checked = Array.from(domainCheckboxes).every((c) => c.checked);
+          });
+        });
+
+        // ── Estado ────────────────────────────────────────────────
+        function saveState()  { localStorage.setItem(STORAGE_KEY, JSON.stringify(quizState)); }
+        function clearState() { localStorage.removeItem(STORAGE_KEY); quizState = {}; }
+        function loadState()  {
+          try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return null; }
+        }
+
+        function checkSavedProgress() {
+          const bankSize = questionBank.length;
+          if (bankSize === 0) { configPage.innerHTML = "<h2>Erro: Banco vazio</h2>"; return; }
+
+          // FIX: máximo 40 questões por simulado (ou o total do banco se menor)
+          const maxAllowed = Math.min(40, bankSize);
+          slider.max   = maxAllowed;
+          slider.value = Math.min(10, bankSize);
+          updateSliderValue();
+
+          const saved = loadState();
+          if (saved && saved.questions && saved.currentQuestionIndex < saved.questions.length) {
+            continueBtn.classList.remove("hidden");
+          } else {
+            continueBtn.classList.add("hidden");
+          }
+          loadBookmarks();
+        }
+
+        // ── Navegação de Páginas ──────────────────────────────────
+        function showPage(pageId) {
+          [configPage, quizPage, resultsPage, bookmarksPage].forEach((p) => p.classList.add("hidden"));
+          document.getElementById(pageId).classList.remove("hidden");
+          if (pageId === "quiz-page") {
+            quizStats.classList.remove("hidden");
+            globalResetBtn.classList.remove("hidden");
+          } else {
+            quizStats.classList.add("hidden");
+            globalResetBtn.classList.add("hidden");
+          }
+        }
+
+        // ── Modal de Abandono (FIX: sem confirm()) ────────────────
+        function openAbandonModal()  { abandonOverlay.classList.add("active"); }
+        function closeAbandonModal() { abandonOverlay.classList.remove("active"); }
+
+        globalResetBtn.addEventListener("click", openAbandonModal);
+        abandonCancelBtn.addEventListener("click", closeAbandonModal);
+        abandonOverlay.addEventListener("click", (e) => {
+          if (e.target === abandonOverlay) closeAbandonModal();
+        });
+        abandonConfirmBtn.addEventListener("click", () => {
+          closeAbandonModal();
+          clearInterval(timerInterval);
+          clearState();
+          showPage("config-page");
+          checkSavedProgress();
+        });
+
+        // ── Iniciar Quiz ──────────────────────────────────────────
+        function startQuiz(continuing = false) {
+          if (continuing) {
+            quizState = loadState();
+            if (!quizState || quizState.currentQuestionIndex >= quizState.questions.length) {
+              continuing = false; clearState();
+            }
+          }
+          if (!continuing) {
+            const numQuestions    = parseInt(slider.value, 10);
+            const mode            = document.querySelector('input[name="quiz-mode"]:checked').value;
+            const selectedDomains = Array.from(domainCheckboxes).filter((cb) => cb.checked).map((cb) => cb.value);
+            const filteredBank    = questionBank.filter((q) => selectedDomains.includes(q.dominio.split(".")[0]));
+
+            if (filteredBank.length === 0) { alert("Selecione pelo menos um módulo para iniciar."); return; }
+
+            const questions = [...filteredBank].sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+            quizState = { questions, currentQuestionIndex: 0, score: 0, timer: 0, answers: [], mode, bookmarked: [] };
+          }
+
+          showPage("quiz-page");
+          loadQuestion(quizState.currentQuestionIndex);
+          startTimer();
+          updateScoreDisplay();
+          saveState();
+        }
+
+        // ── Timer ─────────────────────────────────────────────────
+        function startTimer() {
+          clearInterval(timerInterval);
+          let seconds = quizState.timer || 0;
+          timerDisplay.textContent = `Tempo: ${formatTime(seconds)}`;
+          timerInterval = setInterval(() => {
+            if (document.hidden) return;
+            seconds++; quizState.timer = seconds;
+            timerDisplay.textContent = `Tempo: ${formatTime(seconds)}`;
+            if (seconds % 10 === 0) saveState();
+          }, 1000);
+        }
+        function formatTime(totalSeconds) {
+          const mins = Math.floor(totalSeconds / 60);
+          const secs = totalSeconds % 60;
+          return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        }
+
+        // ── Carregar Questão ──────────────────────────────────────
+        function loadQuestion(index) {
+          questionProgressDisplay.textContent = `Questão: ${index + 1}/${quizState.questions.length}`;
+          const question   = quizState.questions[index];
+          const domainInfo = domainMap[question.dominio];
+          const isExam     = quizState.mode === "exam";
+
+          // Badge de modo exame no domínio
+          questionDomain.innerHTML = `<strong>${domainInfo.domain}</strong>${domainInfo.task}${isExam ? '<span class="exam-mode-badge">MODO EXAME</span>' : ''}`;
+          questionText.textContent = question.pergunta;
+          optionsContainer.innerHTML = "";
+          explanationCard.classList.add("hidden");
+
+          const isBookmarked = isQuestionBookmarked(question);
+          bookmarkBtn.classList.toggle("bookmarked", isBookmarked);
+          bookmarkBtn.textContent = isBookmarked ? "📌 Marcado" : "📌 Marcar";
+
+          const inputType = question.tipo === "multiple" ? "radio" : "checkbox";
+          question.opcoes.forEach((opt, i) => {
+            const val   = question.tipo === "multiple" ? opt.charAt(0) : i + 1;
+            const div   = document.createElement("div"); div.className = "option";
+            const input = document.createElement("input");
+            input.type  = inputType; input.id = `opt-${i}`; input.name = "option"; input.value = val;
+            const label = document.createElement("label");
+            label.htmlFor = `opt-${i}`; label.textContent = opt;
+            div.appendChild(input); div.appendChild(label);
+            div.addEventListener("click", (e) => { if (e.target.tagName !== "INPUT" && !input.disabled) input.click(); });
+            optionsContainer.appendChild(div);
+          });
+
+          // FIX modo exame: botão com texto correto, sem nextBtn intermediário
+          submitBtn.textContent = isExam ? "Confirmar e Avançar ➔" : "Verificar Resposta";
+          submitBtn.classList.remove("hidden");
+          nextBtn.classList.add("hidden");
+          submitBtn.disabled = false;
+        }
+
+        // ── Submeter Resposta ─────────────────────────────────────
+        function handleSubmitAnswer() {
+          const question = quizState.questions[quizState.currentQuestionIndex];
+          const isExam   = quizState.mode === "exam";
+          let selected; let isCorrect = false;
+
+          if (question.tipo === "multiple") {
+            const radio = optionsContainer.querySelector('input[name="option"]:checked');
+            if (!radio) { alert("Selecione uma opção antes de continuar."); return; }
+            selected  = radio.value;
+            isCorrect = selected === question.correta;
+          } else {
+            const checks = optionsContainer.querySelectorAll('input[name="option"]:checked');
+            if (checks.length === 0) { alert("Selecione ao menos uma opção antes de continuar."); return; }
+            selected  = Array.from(checks).map((cb) => parseInt(cb.value));
+            isCorrect = question.correta.length === selected.length && question.correta.every(v => selected.includes(v));
+          }
+
+          if (isCorrect) quizState.score++;
+          quizState.answers.push({
+            question: question.pergunta, questionDomain: question.dominio,
+            answerGiven: selected, correctAnswer: question.correta,
+            explanation: question.explicacao, isCorrect
+          });
+
+          optionsContainer.querySelectorAll("input").forEach((inp) => (inp.disabled = true));
+
+          if (isExam) {
+            // FIX modo exame: sem feedback, sem nextBtn — avança direto
+            saveState();
+            quizState.currentQuestionIndex++;
+            if (quizState.currentQuestionIndex < quizState.questions.length) {
+              loadQuestion(quizState.currentQuestionIndex);
+              updateScoreDisplay(); // score oculto no header em exam mode mas atualizado internamente
+            } else {
+              endQuiz();
+            }
+          } else {
+            // Modo Prática: exibe feedback e botão "Próxima"
+            highlightAnswers(question, selected);
+            explanationCard.innerHTML = `<h3>${isCorrect ? "✅ Correto!" : "❌ Incorreto"}</h3><p>${question.explicacao}</p>`;
+            explanationCard.classList.remove("hidden");
+            explanationCard.className = `explanation-card ${isCorrect ? "correct" : "incorrect"}`;
+            submitBtn.classList.add("hidden");
+            nextBtn.classList.remove("hidden");
+            updateScoreDisplay();
+            saveState();
+          }
+        }
+
+        // FIX: em modo exame, oculta o placar em tempo real para não revelar acertos
+        function updateScoreDisplay() {
+          if (quizState.mode === "exam") {
+            scoreDisplay.textContent = `Questão ${(quizState.answers.length) + 1} de ${quizState.questions.length}`;
+          } else {
+            scoreDisplay.textContent = `Acertos: ${quizState.score}/${quizState.answers.length}`;
+          }
+        }
+
+        function highlightAnswers(question, selected) {
+          optionsContainer.querySelectorAll(".option").forEach((opt) => {
+            const val        = question.tipo === "multiple" ? opt.querySelector("input").value : parseInt(opt.querySelector("input").value);
+            const isAnsCorrect  = question.tipo === "multiple" ? val === question.correta : question.correta.includes(val);
+            const isAnsSelected = question.tipo === "multiple" ? val === selected : selected.includes(val);
+            if (isAnsCorrect)               opt.classList.add("correct");
+            if (isAnsSelected && !isAnsCorrect) opt.classList.add("incorrect", "selected");
+            if (isAnsSelected && isAnsCorrect)  opt.classList.add("correct", "selected");
+          });
+        }
+
+        function handleNextQuestion() {
+          quizState.currentQuestionIndex++;
+          if (quizState.currentQuestionIndex < quizState.questions.length) loadQuestion(quizState.currentQuestionIndex);
+          else endQuiz();
+        }
+
+        // ── Encerrar Quiz ─────────────────────────────────────────
+        function endQuiz() {
+          clearInterval(timerInterval);
+          showPage("results-page");
+
+          const total = quizState.questions.length;
+          const score = quizState.score;
+          const pct   = ((score / total) * 100).toFixed(0);
+          const modeLabel = quizState.mode === "exam" ? " (Modo Exame)" : " (Modo Prática)";
+
+          resultsSummary.innerHTML = `
+            <p class="result-score">Nota Final: ${pct}%${pct >= 70 ? " 🎉" : " 📚"}</p>
+            <p><strong>Acertos:</strong> ${score} de ${total}${modeLabel}</p>
+            <p><strong>Tempo Total:</strong> ${formatTime(quizState.timer)}</p>
+          `;
+
+          // FIX: Estatísticas por domínio (antes vazia — agora populada)
+          const domainResults = {};
+          quizState.answers.forEach((a) => {
+            if (!domainResults[a.questionDomain]) domainResults[a.questionDomain] = { total: 0, correct: 0 };
+            domainResults[a.questionDomain].total++;
+            if (a.isCorrect) domainResults[a.questionDomain].correct++;
+          });
+
+          domainStatsDiv.innerHTML = "<h3 style='margin-bottom:1rem;'>📊 Desempenho por Módulo</h3>";
+          Object.entries(domainResults).sort().forEach(([domain, res]) => {
+            const domPct = ((res.correct / res.total) * 100).toFixed(0);
+            const color  = domPct >= 70 ? "var(--correct-border)" : domPct >= 50 ? "var(--warning-border)" : "var(--incorrect-border)";
+            domainStatsDiv.innerHTML += `
+              <div class="domain-stat-item">
+                <span style="font-size:0.85rem;flex:2">${domainMap[domain]?.domain || domain}</span>
+                <div class="stat-bar"><div class="stat-bar-fill" style="width:${domPct}%;background:${color}"></div></div>
+                <span style="font-weight:700;min-width:60px;text-align:right;color:${color}">${res.correct}/${res.total} (${domPct}%)</span>
+              </div>`;
+          });
+
+          const wrong = quizState.answers.filter((a) => !a.isCorrect);
+          wrongAnswersList.innerHTML = "<h3>📝 Revisão Técnica das Respostas Erradas</h3>";
+          if (wrong.length === 0) {
+            wrongAnswersList.innerHTML += "<p style='margin-top:1rem'>🎉 Você gabaritou! O Red Hat cert está próximo!</p>";
+          } else {
+            wrong.forEach((item) => {
+              wrongAnswersList.innerHTML += `
+                <div class="wrong-answer-item">
+                  <h4>${domainMap[item.questionDomain]?.domain || item.questionDomain}</h4>
+                  <p style="padding:0.75rem 1rem 0"><strong>Questão:</strong> ${item.question}</p>
+                  <div class="explanation"><strong>Explicação do Instrutor:</strong><br>${item.explanation}</div>
+                </div>`;
+            });
+          }
+          clearState(); checkSavedProgress();
+        }
+
+        // ── Bookmarks ─────────────────────────────────────────────
+        function loadBookmarks() {
+          try { permanentBookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY)) || []; } catch(e) { permanentBookmarks = []; }
+          bookmarkCount.textContent = permanentBookmarks.length;
+        }
+        function saveBookmarks() { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(permanentBookmarks)); loadBookmarks(); }
+        function isQuestionBookmarked(q) { return permanentBookmarks.some(b => b.pergunta === q.pergunta); }
+
+        bookmarkBtn.addEventListener("click", () => {
+          const q = quizState.questions[quizState.currentQuestionIndex];
+          if (isQuestionBookmarked(q)) permanentBookmarks = permanentBookmarks.filter(b => b.pergunta !== q.pergunta);
+          else permanentBookmarks.push(q);
+          saveBookmarks();
+          bookmarkBtn.classList.toggle("bookmarked", isQuestionBookmarked(q));
+          bookmarkBtn.textContent = isQuestionBookmarked(q) ? "📌 Marcado" : "📌 Marcar";
+        });
+
+        viewBookmarksBtn.addEventListener("click", () => {
+          showPage("bookmarks-page");
+          bookmarksList.innerHTML = permanentBookmarks.length === 0 ? "<p>Nenhuma questão marcada.</p>" : "";
+          permanentBookmarks.forEach((q, i) => {
+            bookmarksList.innerHTML += `
+              <div class="wrong-answer-item">
+                <h4>${domainMap[q.dominio]?.domain || q.dominio}</h4>
+                <p style="padding:0.75rem 1rem 0"><strong>Pergunta:</strong> ${q.pergunta}</p>
+                <div class="explanation">${q.explicacao}</div>
+                <button class="btn btn-secondary btn-sm" onclick="removeBookmark(${i})" style="margin:10px">Remover</button>
+              </div>`;
+          });
+        });
+        window.removeBookmark = function(i) { permanentBookmarks.splice(i, 1); saveBookmarks(); viewBookmarksBtn.click(); };
+
+        // ── Event Listeners ───────────────────────────────────────
+        slider.addEventListener("input", updateSliderValue);
+        function updateSliderValue() { sliderValue.textContent = slider.value; }
+        startBtn.addEventListener("click", () => startQuiz(false));
+        continueBtn.addEventListener("click", () => startQuiz(true));
+        backFromBookmarksBtn.addEventListener("click", () => showPage("config-page"));
+        submitBtn.addEventListener("click", handleSubmitAnswer);
+        nextBtn.addEventListener("click", handleNextQuestion);
+        restartFromResultsBtn.addEventListener("click", () => showPage("config-page"));
+
+        checkSavedProgress();
+      });
+    </script>
+  </body>
+</html>
